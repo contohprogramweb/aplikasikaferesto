@@ -169,6 +169,8 @@ class Admin_category extends Admin_Controller {
                 if ($result) {
                     $this->log_activity('UPDATE_CATEGORY', 'Update kategori: ' . $data['name'], $id);
                     
+                    // Invalidate cache
+                    $this->_invalidate_cache($id);
                     $this->output
                         ->set_content_type('application/json')
                         ->set_output(json_encode([
@@ -185,6 +187,8 @@ class Admin_category extends Admin_Controller {
                 if ($new_id) {
                     $this->log_activity('CREATE_CATEGORY', 'Buat kategori baru: ' . $data['name'], $new_id);
                     
+                    // Invalidate cache
+                    $this->_invalidate_cache();
                     $this->output
                         ->set_content_type('application/json')
                         ->set_output(json_encode([
@@ -363,5 +367,21 @@ class Admin_category extends Admin_Controller {
             return FALSE;
         }
         return TRUE;
+    }
+
+    /**
+     * Invalidate cache categories
+     * TTL 1 jam untuk cache
+     */
+    private function _invalidate_cache($id = null)
+    {
+        // Delete global cache
+        delete_cache('categories_all');
+        delete_cache('menu_all');
+        
+        // Delete specific category cache jika ada ID
+        if ($id !== null) {
+            delete_cache('category_' . $id);
+        }
     }
 }
