@@ -356,17 +356,22 @@ function renderTableDetail(table, orders) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${order.items.map((item, idx) => `
-                        <tr>
+                    ${order.items.map((item, idx) => {
+                        const isCanceled = item.status === 'canceled' || item.status === 'batal';
+                        const rowClass = isCanceled ? 'canceled-item' : '';
+                        const opacityStyle = isCanceled ? 'style="opacity: 0.5;"' : '';
+                        return `
+                        <tr class="${rowClass}" ${opacityStyle}>
                             <td>${idx + 1}</td>
-                            <td>${escapeHtml(item.menu_item_name || item.name)}</td>
-                            <td>${item.quantity}</td>
+                            <td>${isCanceled ? '<s>' : ''}${escapeHtml(item.menu_item_name || item.name)}${isCanceled ? '</s>' : ''}</td>
+                            <td>${isCanceled ? '<s>' : ''}${item.quantity}${isCanceled ? '</s>' : ''}</td>
                             <td>Rp ${formatNumber(item.price)}</td>
-                            <td>Rp ${formatNumber(item.subtotal)}</td>
+                            <td>${isCanceled ? '<s>' : ''}Rp ${formatNumber(item.subtotal)}${isCanceled ? '</s>' : ''}</td>
                             <td>${item.notes ? escapeHtml(item.notes) : '-'}</td>
                             <td><span class="badge badge-${item.status}">${item.status}</span></td>
                         </tr>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
