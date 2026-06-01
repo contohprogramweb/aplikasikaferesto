@@ -1,1 +1,37 @@
-Nothing needs to be added to .gitignore since the changes only include source code files (.php, .js) and no build artifacts, dependencies, or temporary files.
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.log
+*.tmp
+*.swp
+
+# Dependencies
+vendor/
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+```

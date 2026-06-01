@@ -194,6 +194,75 @@ class Order_model extends CI_Model {
     }
 
     /**
+     * Get ready orders for waiter (full list, no delta)
+     * @return array
+     */
+    public function get_ready_orders_full()
+    {
+        $this->db->select('oi.*, o.order_number, o.table_id, t.table_number');
+        $this->db->from($this->items_table . ' oi');
+        $this->db->join($this->table . ' o', 'o.id = oi.order_id');
+        $this->db->join('tables t', 't.id = o.table_id', 'left');
+        $this->db->where('oi.status', 'ready');
+        $this->db->order_by('oi.created_at', 'ASC');
+        
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    /**
+     * Get ready orders with delta filtering (for smart polling)
+     * Returns items with ID > last_id OR created_at > last_timestamp
+     * @param int $last_id
+     * @param string $last_timestamp
+     * @return array
+     */
+    public function get_ready_orders_delta($last_id = 0, $last_timestamp = '')
+    {
+        $this->db->select('oi.*, o.order_number, o.table_id, t.table_number');
+        $this->db->from($this->items_table . ' oi');
+        $this->db->join($this->table . ' o', 'o.id = oi.order_id');
+        $this->db->join('tables t', 't.id = o.table_id', 'left');
+        $this->db->where('oi.status', 'ready');
+        
+        // Delta filtering
+        $delta_conditions = [];
+        if ($last_id > 0) {
+            $delta_conditions[] = 'oi.id > ' . (int)$last_id;
+        }
+        if (!empty($last_timestamp)) {
+            $escaped_ts = $this->db->escape($last_timestamp);
+            $delta_conditions[] = 'oi.created_at > ' . $escaped_ts;
+        }
+        
+        if (!empty($delta_conditions)) {
+            $this->db->where('(' . implode(' OR ', $delta_conditions) . ')');
+        }
+        
+        $this->db->order_by('oi.created_at', 'ASC');
+        
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    /**
+     * Get in-progress orders for waiter (items not yet ready)
+     * @return array
+     */
+    public function get_in_progress_orders_full()
+    {
+        $this->db->select('oi.*, o.order_number, o.table_id, t.table_number, oi.status as kitchen_status');
+        $this->db->from($this->items_table . ' oi');
+        $this->db->join($this->table . ' o', 'o.id = oi.order_id');
+        $this->db->join('tables t', 't.id = o.table_id', 'left');
+        $this->db->where_in('oi.status', ['pending', 'confirmed', 'preparing']);
+        $this->db->order_by('oi.created_at', 'ASC');
+        
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    /**
      * Get orders for KDS (Kitchen Display System)
      * @param string $last_timestamp
      * @param int $limit
