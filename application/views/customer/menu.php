@@ -741,6 +741,56 @@
         </div>
     </div>
 
+    <!-- Item Detail Modal -->
+    <div class="item-detail-modal-overlay" id="item-detail-overlay"></div>
+    <div class="item-detail-modal" id="item-detail-modal">
+        <div class="item-detail-content">
+            <button class="btn-close-modal" id="btn-close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="item-detail-image-container">
+                <img src="" alt="" class="item-detail-image" id="modal-item-image">
+                <div class="item-detail-placeholder" id="modal-item-placeholder">
+                    <i class="fas fa-utensils"></i>
+                </div>
+            </div>
+            <div class="item-detail-body">
+                <h2 class="item-detail-name" id="modal-item-name"></h2>
+                <div class="item-detail-price" id="modal-item-price"></div>
+                <p class="item-detail-description" id="modal-item-description"></p>
+                
+                <div class="qty-adjuster-container">
+                    <label>Jumlah:</label>
+                    <div class="qty-adjuster">
+                        <button class="qty-btn-large" id="btn-decrease-qty">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="qty-input" id="modal-qty-input" value="1" min="1" max="99">
+                        <button class="qty-btn-large" id="btn-increase-qty">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="notes-container">
+                    <label for="modal-notes">Catatan Khusus (opsional):</label>
+                    <textarea class="notes-textarea" id="modal-notes" maxlength="200" rows="3" placeholder="Contoh: Tidak pedas, kurang garam, dll."></textarea>
+                    <div class="notes-counter"><span id="notes-char-count">0</span>/200</div>
+                </div>
+                
+                <div class="subtotal-container">
+                    <span>Subtotal:</span>
+                    <span class="subtotal-value" id="modal-subtotal"></span>
+                </div>
+            </div>
+            <div class="item-detail-footer">
+                <button class="btn-add-to-cart" id="btn-add-to-cart">
+                    <i class="fas fa-shopping-cart"></i> Tambah ke Pesanan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden data for JavaScript -->
     <div id="menu-data" 
          data-token="<?= $token ?>"
