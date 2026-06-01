@@ -198,17 +198,31 @@ class Auth_model extends CI_Model {
     }
     
     /**
-     * Update last login timestamp
+     * Update last login timestamp dengan security data
+     * 
+     * @param int $user_id
+     * @param string $ip_address
+     * @return void
+     */
+    public function update_last_login_with_security($user_id, $ip_address) {
+        $this->db->where('id', $user_id)
+                 ->update(self::TABLE_USERS, [
+                     'last_login' => date('Y-m-d H:i:s'),
+                     'last_login_ip' => $ip_address,
+                     'last_activity' => date('Y-m-d H:i:s'),
+                     'failed_login_attempts' => 0,
+                     'locked_until' => null
+                 ]);
+    }
+    
+    /**
+     * Update last login timestamp (legacy method)
      * 
      * @param int $user_id
      * @return void
      */
     public function update_last_login($user_id) {
-        $this->db->where('id', $user_id)
-                 ->update(self::TABLE_USERS, [
-                     'last_login' => date('Y-m-d H:i:s'),
-                     'last_activity' => date('Y-m-d H:i:s')
-                 ]);
+        $this->update_last_login_with_security($user_id, '0.0.0.0');
     }
     
     /**
