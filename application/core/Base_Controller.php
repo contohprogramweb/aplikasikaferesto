@@ -21,6 +21,7 @@ class Base_Controller extends CI_Controller {
         // Load common libraries
         $this->load->library('session');
         $this->load->library('form_validation');
+        $this->load->library('rate_limiter');
         $this->load->helper(['url', 'form', 'security']);
         $this->load->driver('cache');
         
@@ -30,6 +31,15 @@ class Base_Controller extends CI_Controller {
         
         // Set timezone
         date_default_timezone_set('Asia/Jakarta');
+        
+        // Rate limiter configuration
+        $this->limits = [
+            'table_check' => ['limit' => 10, 'window' => 60, 'block' => 300],    // 10 req/menit, block 5 menit
+            'session' => ['limit' => 10, 'window' => 60, 'block' => 300],
+            'polling' => ['limit' => 1, 'window' => 3, 'block' => 0],            // 1 req/3 detik, no block
+            'login' => ['limit' => 5, 'window' => 900, 'block' => 900],          // 5x/15 menit, block 15 menit
+            'admin' => ['limit' => 60, 'window' => 60, 'block' => 300],         // 60 req/menit
+        ];
     }
 
     /**
@@ -179,5 +189,69 @@ class Base_Controller extends CI_Controller {
             return $this->security->get_csrf_token_name();
         }
         return '';
+    }
+
+    /**
+     * Check rate limit untuk endpoint group tertentu
+     * 
+     * @param string $endpoint_group
+     * @param string|null $identifier Custom identifier (optional)
+     * @return bool TRUE jika allowed, FALSE jika exceeded
+     */
+    protected function check_rate_limit($endpoint_group, $identifier = null)
+    {
+        $result = $this->rate_limiter->check_limit($endpoint_group, $identifier);
+        
+        if (!$result['allowed']) {
+            $this->_send_429_response($result);
+            return FALSE;
+        }
+        
+        return TRUE;
+    }
+
+    /**
+     * Record login attempt (untuk tracking dan blocking)
+     * 
+     * @param string $username
+     * @param bool $success
+     * @return void
+     */
+    protected function record_login_attempt($username, $success = false)
+    {
+        $ip_address = $this->input->ip_address();
+        $this->rate_limiter->record_login_attempt($ip_address, $username, $success);
+    }
+
+    /**
+     * Send 429 Too Many Requests response
+     * 
+     * @param array $result Result dari check_limit()
+     * @return void
+     */
+    protected function _send_429_response($result)
+    {
+        // Set header Retry-After sesuai spesifikasi
+        $this->output
+            ->set_status_header(429)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_header('Retry-After: ' . $result['retry_after']);
+        
+        // Response JSON sesuai spesifikasi SRS
+        $response = [
+            'status' => 'error',
+            'message' => 'Terlalu banyak permintaan. Silakan tunggu.',
+            'code' => 429
+        ];
+        
+        // Tambahkan informasi tambahan jika blocked
+        if ($result['blocked']) {
+            $response['blocked'] = true;
+            $response['retry_after'] = $result['retry_after'];
+        }
+        
+        $this->output->set_output(json_encode($response));
+        $this->output->_display();
+        exit;
     }
 }
