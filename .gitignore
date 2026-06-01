@@ -1,10 +1,73 @@
 ```
-# Logs
-*.log
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+target/
 
-# Backup and restore files
-application/logs/backup.log
-application/logs/restore.log
-database/backup.php
-database/restore.php
+# Dependencies
+node_modules/
+vendor/
+*.gem
+*.jar
+*.war
+*.ear
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.nox/
+*.so
+
+# PHP specific
+*.php~
+*.php.bak
+*.php.swp
+*.php.swo
+
+# CodeIgniter specific
+application/logs/
+application/cache/
+application/config/config.php
+application/config/database.php
+system/
 ```
