@@ -431,4 +431,355 @@ class Customer extends CI_Controller {
             ]);
         }
     }
+
+    /**
+     * UC-CUST-06: Order Status Page
+     * Displays real-time order status with timeline/stepper
+     * BR-14: Only shows orders for active table
+     */
+    public function status()
+    {
+        $token = $this->input->get('token');
+        
+        if (!$token) {
+            $token = $this->session->userdata('customer_token');
+        }
+
+        if (!$token) {
+            redirect('customer');
+            return;
+        }
+
+        // Validate session
+        $session = $this->Customer_session_model->get_by_token($token);
+        
+        if (!$session) {
+            $this->session->unset_userdata('customer_token');
+            redirect('customer?error=session_invalid');
+            return;
+        }
+
+        // Check if session expired
+        if (strtotime($session['expires_at']) <= time()) {
+            $this->Customer_session_model->delete($session['id']);
+            $this->session->unset_userdata('customer_token');
+            redirect('customer?error=session_expired');
+            return;
+        }
+
+        // Get table info
+        $table = $this->Table_model->get_by_id($session['table_id']);
+        
+        if (!$table || !$table['is_active']) {
+            redirect('customer?error=table_invalid');
+            return;
+        }
+
+        // Update session last activity
+        $this->Customer_session_model->update_last_activity($session['id']);
+
+        // Get active orders for this table
+        $this->load->model('Order_model');
+        $orders = $this->Order_model->get_open_order_by_table($table['id']);
+        
+        $order_items = [];
+        $order_status_map = [];
+        
+        if ($orders) {
+            $order_items = $this->Order_model->get_items_by_order($orders['id']);
+            $order_status_map[$orders['id']] = $orders['status'];
+        }
+
+        // Check if can request bill (BR-15)
+        $can_request_bill = false;
+        $has_delivered_item = false;
+        $all_items_delivered = true;
+        
+        foreach ($order_items as $item) {
+            if (in_array($item['status'], ['delivered', 'completed'])) {
+                $has_delivered_item = true;
+            }
+            if (!in_array($item['status'], ['delivered', 'completed', 'cancelled'])) {
+                $all_items_delivered = false;
+            }
+        }
+        
+        // Check table status for bill request
+        $blocked_table_statuses = ['menunggu_bayar', 'lunas'];
+        $table_status = strtolower($table['status']);
+        
+        if (!in_array($table_status, $blocked_table_statuses)) {
+            // Config: BILL_AFTER_ALL_DELIVERED (default: false = at least 1 item)
+            $bill_after_all = $this->config->item('BILL_AFTER_ALL_DELIVERED') ?? false;
+            
+            if ($bill_after_all) {
+                $can_request_bill = $all_items_delivered && count($order_items) > 0;
+            } else {
+                $can_request_bill = $has_delivered_item;
+            }
+        }
+
+        $data = [
+            'page_title' => 'Status Pesanan',
+            'token' => $token,
+            'table' => $table,
+            'orders' => $orders,
+            'order_items' => $order_items,
+            'order_status_map' => $order_status_map,
+            'can_request_bill' => $can_request_bill,
+            'current_timestamp' => date('Y-m-d H:i:s'),
+            'restaurant_name' => $this->config->item('restaurant_name') ?: 'Smart Restaurant'
+        ];
+
+        $this->load->view('customer/status', $data);
+    }
+
+    /**
+     * UC-CUST-06: AJAX Order Status Polling Endpoint
+     * Returns delta updates since last_timestamp
+     * Response: {items[], order_status, has_changes}
+     */
+    public function order_status()
+    {
+        $this->output->set_content_type('application/json');
+        
+        $token = $this->input->get('token');
+        $last_timestamp = $this->input->get('last_timestamp');
+        $last_id = $this->input->get('last_id', 0);
+        
+        if (!$token) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Token required',
+                'code' => 422
+            ]);
+            return;
+        }
+
+        // Validate session
+        $session = $this->Customer_session_model->get_by_token($token);
+        
+        if (!$session) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Session invalid',
+                'code' => 401
+            ]);
+            return;
+        }
+
+        // Get table info (BR-14)
+        $table = $this->Table_model->get_by_id($session['table_id']);
+        
+        if (!$table) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Table not found',
+                'code' => 404
+            ]);
+            return;
+        }
+
+        $this->load->model('Order_model');
+        
+        // Get open order for this table
+        $order = $this->Order_model->get_open_order_by_table($table['id']);
+        
+        $items = [];
+        $order_status = null;
+        $has_changes = false;
+        
+        if ($order) {
+            $order_status = $order['status'];
+            
+            // Get items with delta filtering
+            if (!empty($last_timestamp)) {
+                // Delta query: items updated after last_timestamp OR id > last_id
+                $this->db->select('oi.*, m.name as menu_item_name, m.image as menu_item_image');
+                $this->db->from('order_items oi');
+                $this->db->join('menu_items m', 'm.id = oi.menu_item_id', 'left');
+                $this->db->where('oi.order_id', $order['id']);
+                $this->db->where("(oi.updated_at > " . $this->db->escape($last_timestamp) . " OR oi.id > " . (int)$last_id . ")");
+                $this->db->order_by('oi.created_at', 'ASC');
+                $query = $this->db->get();
+                $items = $query->result_array();
+                $has_changes = count($items) > 0;
+            }
+            
+            // If no delta or initial load, get all items
+            if (empty($last_timestamp) || empty($items)) {
+                $items = $this->Order_model->get_items_by_order($order['id']);
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => [
+                'items' => $items,
+                'order_status' => $order_status,
+                'has_changes' => $has_changes,
+                'current_timestamp' => date('Y-m-d H:i:s')
+            ]
+        ]);
+    }
+
+    /**
+     * UC-CUST-07: Request Bill
+     * Customer requests payment (BR-15, BR-16)
+     * Updates orders.status and tables.status to 'menunggu_bayar'
+     */
+    public function request_bill()
+    {
+        $this->output->set_content_type('application/json');
+        
+        $token = $this->input->post('token');
+        
+        if (!$token) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Token required',
+                'code' => 422
+            ]);
+            return;
+        }
+
+        // Validate session
+        $session = $this->Customer_session_model->get_by_token($token);
+        
+        if (!$session) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Session invalid',
+                'code' => 401
+            ]);
+            return;
+        }
+
+        // Get table info
+        $table = $this->Table_model->get_by_id($session['table_id']);
+        
+        if (!$table) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Table not found',
+                'code' => 404
+            ]);
+            return;
+        }
+
+        // BR-15: Validate bill request eligibility
+        $blocked_table_statuses = ['menunggu_bayar', 'lunas'];
+        $table_status = strtolower($table['status']);
+        
+        if (in_array($table_status, $blocked_table_statuses)) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Tagihan sudah diminta atau sudah lunas',
+                'code' => 400
+            ]);
+            return;
+        }
+
+        $this->load->model('Order_model');
+        
+        // Get open order for this table
+        $order = $this->Order_model->get_open_order_by_table($table['id']);
+        
+        if (!$order) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Tidak ada pesanan aktif',
+                'code' => 400
+            ]);
+            return;
+        }
+
+        // Get order items
+        $order_items = $this->Order_model->get_items_by_order($order['id']);
+        
+        // Validate: at least 1 delivered item (or all, depending on config)
+        $has_delivered_item = false;
+        $all_items_delivered = true;
+        
+        foreach ($order_items as $item) {
+            if (in_array($item['status'], ['delivered', 'completed'])) {
+                $has_delivered_item = true;
+            }
+            if (!in_array($item['status'], ['delivered', 'completed', 'cancelled'])) {
+                $all_items_delivered = false;
+            }
+        }
+        
+        $bill_after_all = $this->config->item('BILL_AFTER_ALL_DELIVERED') ?? false;
+        
+        if ($bill_after_all) {
+            if (!$all_items_delivered || count($order_items) === 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Semua item harus terkirim sebelum meminta tagihan',
+                    'code' => 400
+                ]);
+                return;
+            }
+        } else {
+            if (!$has_delivered_item) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Minimal 1 item harus terkirim sebelum meminta tagihan',
+                    'code' => 400
+                ]);
+                return;
+            }
+        }
+
+        // Calculate totals (excluding cancelled items)
+        $subtotal = 0;
+        foreach ($order_items as $item) {
+            if ($item['status'] !== 'cancelled') {
+                $subtotal += (float) $item['subtotal'];
+            }
+        }
+        
+        $tax_rate = $this->config->item('tax_rate') ?: 0.10;
+        $service_rate = $this->config->item('service_rate') ?: 0.05;
+        $tax_amount = $subtotal * $tax_rate;
+        $service_amount = $subtotal * $service_rate;
+        $total = $subtotal + $tax_amount + $service_amount;
+
+        // Update order status to 'menunggu_bayar'
+        $this->Order_model->update($order['id'], [
+            'status' => 'menunggu_bayar',
+            'payment_status' => 'pending',
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Update table status to 'menunggu_bayar' (BR-16)
+        $this->Table_model->update_status($table['id'], 'menunggu_bayar');
+
+        // Log activity
+        $this->load->model('Activity_log_model');
+        $this->Activity_log_model->create([
+            'action' => 'bill_requested',
+            'description' => 'Customer requested bill for order #' . $order['order_number'],
+            'related_table' => 'orders',
+            'related_id' => $order['id'],
+            'ip_address' => $this->input->ip_address(),
+            'user_agent' => $this->input->user_agent(),
+            'priority' => 'high'
+        ]);
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Tagihan berhasil diminta. Mohon tunggu konfirmasi kasir.',
+            'data' => [
+                'order_id' => $order['id'],
+                'order_number' => $order['order_number'],
+                'subtotal' => $subtotal,
+                'tax_amount' => $tax_amount,
+                'service_amount' => $service_amount,
+                'total' => $total,
+                'table_status' => 'menunggu_bayar'
+            ]
+        ]);
+    }
 }

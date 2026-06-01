@@ -184,6 +184,7 @@ $route['customer/order/create'] = 'customer/orders/create';
 $route['customer/order/(:num)'] = 'customer/orders/view/$1';
 $route['customer/payment'] = 'customer/payment';
 $route['customer/receipt/(:num)'] = 'customer/orders/receipt/$1';
+$route['customer/status'] = 'customer/status';
 
 /*
 |--------------------------------------------------------------------------
@@ -222,6 +223,7 @@ $route['api/customer/session'] = 'customer/session';
 $route['api/customer/cart'] = 'customer/cart';
 $route['api/customer/order'] = 'customer/order';
 $route['api/customer/payment'] = 'customer/payment';
+$route['api/customer/order_status'] = 'customer/order_status';
 
 /*
 |--------------------------------------------------------------------------
