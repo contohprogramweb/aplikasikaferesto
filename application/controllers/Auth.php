@@ -143,6 +143,9 @@ class Auth extends Base_Controller {
             // Clear failed login attempts
             $this->auth_model->clear_login_attempts($username, $ip_address);
             
+            // Regenerate session ID untuk mencegah session fixation (SEC-4)
+            $this->session->sess_regenerate(TRUE);
+            
             // Create session data
             $session_data = $this->auth_model->create_session_data($user, !empty($remember_me));
             $this->session->set_userdata($session_data);
@@ -150,6 +153,9 @@ class Auth extends Base_Controller {
             // Set session TTL (8 jam default, 7 hari jika remember me)
             $ttl = !empty($remember_me) ? 604800 : 28800;
             $this->session->set_temp_userdata('session_expires', time() + $ttl, $ttl);
+            
+            // Update last login dengan IP dan timestamp
+            $this->auth_model->update_last_login_with_security($user->id, $ip_address);
             
             // Set remember me cookie jika dipilih
             if (!empty($remember_me)) {
