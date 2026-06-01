@@ -27,7 +27,9 @@ $autoload['packages'] = [];
 $autoload['libraries'] = [
     'database',
     'session',
-    'form_validation'
+    'form_validation',
+    'upload',
+    'image_lib'
 ];
 
 /*
@@ -49,12 +51,8 @@ $autoload['drivers'] = [
 $autoload['helper'] = [
     'url',
     'form',
-    'html',
-    'security',
-    'text',
-    'date',
     'file',
-    'directory'
+    'custom'
 ];
 
 /*

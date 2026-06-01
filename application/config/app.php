@@ -3,105 +3,51 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
-| Restaurant Configuration
+| Restaurant Application Configuration
 |--------------------------------------------------------------------------
+| Based on SRS v4.0 NFR-MAI-03 and NFR-MAI-08
 */
-$config['restaurant_name'] = 'Smart Restaurant POS';
-$config['restaurant_address'] = 'Jl. Contoh No. 123, Jakarta';
-$config['restaurant_phone'] = '+62 21 12345678';
-$config['restaurant_email'] = 'info@smartrestaurant.com';
-$config['restaurant_logo'] = 'assets/images/logo.png';
 
-/*
-|--------------------------------------------------------------------------
-| Tax and Service Charge Configuration
-|--------------------------------------------------------------------------
-*/
-$config['tax_enabled'] = TRUE;
-$config['tax_rate'] = 10.0; // 10% tax
-$config['tax_label'] = 'PB1 (10%)';
+// Basic Restaurant Information
+$config['app_name'] = 'Nama Restoran';
+$config['app_address'] = 'Alamat Restoran';
+$config['app_phone'] = '081234567890';
 
-$config['service_charge_enabled'] = TRUE;
-$config['service_charge_rate'] = 5.0; // 5% service charge
-$config['service_charge_label'] = 'Service Charge (5%)';
+// Tax and Service Charge
+$config['tax_rate'] = 10; // persen
+$config['service_charge'] = 5; // persen
 
-/*
-|--------------------------------------------------------------------------
-| Currency Configuration
-|--------------------------------------------------------------------------
-*/
-$config['currency_symbol'] = 'Rp ';
-$config['currency_code'] = 'IDR';
-$config['currency_decimal_places'] = 0;
-$config['currency_thousand_separator'] = '.';
-$config['currency_decimal_separator'] = ',';
+// Currency Settings
+$config['currency'] = 'IDR';
+$config['currency_symbol'] = 'Rp';
 
-/*
-|--------------------------------------------------------------------------
-| Order Configuration
-|--------------------------------------------------------------------------
-*/
-$config['order_prefix'] = 'ORD';
-$config['order_date_format'] = 'Y-m-d H:i:s';
-$config['order_number_format'] = 'YmdHis'; // e.g., ORD20240115120530
-$config['default_order_status'] = 'pending'; // pending, confirmed, preparing, ready, completed, cancelled
+// Receipt Configuration
+$config['receipt_width'] = 80; // mm (thermal)
+$config['receipt_paper_size'] = 'thermal'; // thermal atau A4
 
-/*
-|--------------------------------------------------------------------------
-| Table Configuration
-|--------------------------------------------------------------------------
-*/
-$config['table_prefix'] = 'T';
-$config['max_guests_per_table'] = 10;
+// Session Timeout Settings
+$config['session_timeout_customer'] = 30; // menit
+$config['session_timeout_staff'] = 8; // jam
 
-/*
-|--------------------------------------------------------------------------
-| Session Configuration
-|--------------------------------------------------------------------------
-*/
-$config['session_timeout_minutes'] = 120; // Customer session timeout in minutes
-$config['customer_session_enabled'] = TRUE;
+// System Settings
+$config['polling_interval'] = 5000; // ms
+$config['items_per_page'] = 10;
+$config['max_discount'] = 100; // persen
 
-/*
-|--------------------------------------------------------------------------
-| QR Code Configuration
-|--------------------------------------------------------------------------
-$config['qr_code_enabled'] = TRUE;
-$config['qr_code_size'] = 200;
-$config['qr_code_error_correction'] = 'M'; // L, M, Q, H
+// QR Code Configuration
+$config['qr_base_url'] = 'https://yourdomain.com';
 
-/*
-|--------------------------------------------------------------------------
-| PDF Configuration (for invoices)
-|--------------------------------------------------------------------------
-*/
-$config['pdf_enabled'] = TRUE;
-$config['pdf_paper_size'] = 'A4';
-$config['pdf_orientation'] = 'portrait';
+// Receipt Settings
+$config['auto_print_receipt'] = false;
+$config['save_receipt_pdf'] = true;
+$config['generate_void_receipt'] = true;
 
-/*
-|--------------------------------------------------------------------------
-| Business Hours
-|--------------------------------------------------------------------------
-*/
-$config['business_hours'] = [
-    'monday' => ['open' => '09:00', 'close' => '22:00'],
-    'tuesday' => ['open' => '09:00', 'close' => '22:00'],
-    'wednesday' => ['open' => '09:00', 'close' => '22:00'],
-    'thursday' => ['open' => '09:00', 'close' => '22:00'],
-    'friday' => ['open' => '09:00', 'close' => '23:00'],
-    'saturday' => ['open' => '09:00', 'close' => '23:00'],
-    'sunday' => ['open' => '10:00', 'close' => '22:00']
-];
+// Order Settings
+$config['require_cancel_reason'] = true;
+$config['bill_after_all_delivered'] = true; // false = bisa minta bill kapan saja
+$config['order_prefix'] = 'T';
+$config['table_reset_delay'] = 0; // menit
 
-/*
-|--------------------------------------------------------------------------
-| Miscellaneous Settings
-|--------------------------------------------------------------------------
-*/
-$config['enable_reviews'] = TRUE;
-$config['enable_loyalty_program'] = FALSE;
-$config['min_order_amount'] = 0;
-$config['max_items_per_order'] = 50;
-$config['allow_split_bill'] = TRUE;
-$config['allow_merge_orders'] = TRUE;
+// Category Settings
+$config['default_category_id'] = 1;
+$config['show_inactive_category_label'] = true;

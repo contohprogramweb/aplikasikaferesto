@@ -19,7 +19,7 @@ $db['default'] = [
     'database' => 'smart_restaurant_pos',
     'dbdriver' => 'mysqli',
     'dbprefix' => '',
-    'pconnect' => FALSE,
+    'pconnect' => TRUE,
     'db_debug' => (ENVIRONMENT !== 'production'),
     'cache_on' => FALSE,
     'cachedir' => '',
@@ -33,7 +33,7 @@ $db['default'] = [
     'port'     => 3306,
     
     // Connection persistence
-    'persistent' => FALSE,
+    'persistent' => TRUE,
     
     // Query timeout in seconds
     'query_timeout' => 30,

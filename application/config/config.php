@@ -104,7 +104,7 @@ $config['log_date_format'] = 'Y-m-d H:i:s';
 |--------------------------------------------------------------------------
 | IMPORTANT: Change this to your own random key!
 */
-$config['encryption_key'] = 'SmartRestaurantPOS2024SecureKey!@#$%';
+$config['encryption_key'] = 'random-string-32-chars-long-here';
 
 /*
 |--------------------------------------------------------------------------
@@ -112,10 +112,10 @@ $config['encryption_key'] = 'SmartRestaurantPOS2024SecureKey!@#$%';
 |--------------------------------------------------------------------------
 */
 $config['sess_driver'] = 'database';
-$config['sess_cookie_name'] = 'smart_restaurant_session';
-$config['sess_expiration'] = 7200;
+$config['sess_cookie_name'] = 'ci_session';
+$config['sess_expiration'] = 28800; // 8 jam
 $config['sess_save_path'] = 'ci_sessions';
-$config['sess_match_ip'] = FALSE;
+$config['sess_match_ip'] = TRUE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
 
@@ -137,8 +137,8 @@ $config['cookie_samesite'] = 'Lax';
 |--------------------------------------------------------------------------
 */
 $config['csrf_protection'] = TRUE;
-$config['csrf_token_name'] = 'srpos_csrf_token';
-$config['csrf_cookie_name'] = 'srpos_csrf_cookie';
+$config['csrf_token_name'] = 'ci_csrf_token';
+$config['csrf_cookie_name'] = 'ci_csrf_token';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = TRUE;
 $config['csrf_exclude_uris'] = ['api/.*'];
