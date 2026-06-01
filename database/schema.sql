@@ -197,27 +197,781 @@ CREATE TABLE `order_items` (
 -- ================================================================
 -- TABLE: customer_sessions
 -- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
 -- ================================================================
 DROP TABLE IF EXISTS `customer_sessions`;
 CREATE TABLE `customer_sessions` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `session_token` VARCHAR(64) NOT NULL,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
     `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
     `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `expires_at` DATETIME NOT NULL,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
     `ended_at` DATETIME DEFAULT NULL,
     `ip_address` VARCHAR(45) DEFAULT NULL,
     `user_agent` VARCHAR(255) DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_customer_sessions_token` (`session_token`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
     KEY `fk_customer_sessions_table` (`table_id`),
     KEY `idx_customer_sessions_status` (`status`),
     KEY `idx_customer_sessions_expires_at` (`expires_at`),
-    CONSTRAINT `fk_customer_sessions_table` 
-        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`) 
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- TABLE: customer_sessions
+-- Description: Track customer sessions for QR ordering
+-- Based on SRS v4.0 - Customer Session Architecture
+-- ================================================================
+DROP TABLE IF EXISTS `customer_sessions`;
+CREATE TABLE `customer_sessions` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(64) NOT NULL COMMENT 'Token format: tbl_[table_id]_[random_hash_16char]',
+    `table_id` INT UNSIGNED NOT NULL,
+    `cart_data` JSON DEFAULT NULL COMMENT 'Cart items in JSON format',
+    `status` ENUM('active', 'expired', 'ended') NOT NULL DEFAULT 'active',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_activity` DATETIME DEFAULT NULL,
+    `expires_at` DATETIME NOT NULL COMMENT 'Session expires at +30 minutes from creation/activity',
+    `ended_at` DATETIME DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `user_agent` VARCHAR(255) DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_customer_sessions_token` (`token`),
+    KEY `fk_customer_sessions_table` (`table_id`),
+    KEY `idx_customer_sessions_status` (`status`),
+    KEY `idx_customer_sessions_expires_at` (`expires_at`),
+    KEY `idx_customer_sessions_last_activity` (`last_activity`),
+    CONSTRAINT `fk_customer_sessions_table`
+        FOREIGN KEY (`table_id`) REFERENCES `tables`(`id`)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
