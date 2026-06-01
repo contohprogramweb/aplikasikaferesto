@@ -117,7 +117,7 @@
     50% { opacity: 0.5; }
 }
 
-/* Tables Grid */
+/* Tables Grid - Responsive 4-6 columns */
 .tables-grid-container {
     flex: 1;
     overflow-y: auto;
@@ -126,8 +126,45 @@
 
 .tables-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(6, 1fr); /* 6 kolom default untuk layar besar */
+    gap: 1rem;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 1920px) {
+    .tables-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (max-width: 1919px) and (min-width: 1280px) {
+    .tables-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 1279px) and (min-width: 1024px) {
+    .tables-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+    .tables-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .tables-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tables-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Table Card */
@@ -221,7 +258,7 @@
 
 .info-value.duration.overtime {
     color: var(--color-danger);
-    animation: blink-red 1s infinite;
+    animation: blink-red 1s infinite; /* BR-1: Durasi timer merah jika >30 menit */
 }
 
 @keyframes blink-red {
@@ -236,7 +273,7 @@
 }
 
 .total-amount {
-    font-size: 1.25rem;
+    font-size: 18px; /* BR-1: Total tagihan 18px bold */
     font-weight: bold;
     color: var(--color-primary);
 }
@@ -246,7 +283,7 @@
     top: 0.5rem;
     right: 50%;
     transform: translateX(50%);
-    animation: blink-yellow 1s infinite;
+    animation: blink-yellow 1s infinite; /* BR-1: Bill Requested indicator lonceng berkedip 1s infinite */
     font-size: 1.5rem;
 }
 
@@ -417,6 +454,18 @@
 
 .items-table td {
     font-size: 0.9rem;
+}
+
+/* BR-2: Item batal - strikethrough, opacity 50%, tidak dihitung */
+.items-table tr.canceled-item td {
+    text-decoration: line-through;
+    opacity: 0.5;
+    background-color: #f8f9fa;
+}
+
+.items-table tr.canceled-item .badge {
+    background-color: #dc3545;
+    color: white;
 }
 
 /* Order Summary */
@@ -605,10 +654,11 @@
     margin-bottom: 0.5rem;
 }
 
-.total-amount {
+.payment-grand-total .total-amount {
     display: block;
-    font-size: 2.5rem;
+    font-size: 32px; /* BR-4: Grand total 32px bold biru */
     font-weight: bold;
+    color: white; /* Override default blue for payment modal header */
 }
 
 .quick-amounts {
