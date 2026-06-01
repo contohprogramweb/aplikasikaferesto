@@ -30,11 +30,11 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>No Order:</strong> <?= esc_html($transaction['order_number']); ?></p>
-                        <p><strong>Meja:</strong> <?= esc_html($transaction['table_code']); ?></p>
+                        <p><strong>No Order:</strong> <?= htmlspecialchars($transaction['order_number'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p><strong>Meja:</strong> <?= htmlspecialchars($transaction['table_code'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Kasir:</strong> <?= esc_html($transaction['cashier_name']); ?></p>
+                        <p><strong>Kasir:</strong> <?= htmlspecialchars($transaction['cashier_name'], ENT_QUOTES, 'UTF-8'); ?></p>
                         <p><strong>Tanggal:</strong> <?= date('d/m/Y H:i:s', strtotime($transaction['created_at'])); ?></p>
                     </div>
                 </div>
@@ -66,11 +66,11 @@
                     <tbody>
                         <?php foreach ($items as $item): ?>
                         <tr>
-                            <td><?= esc_html($item['item_name']); ?></td>
-                            <td><?= $item['quantity']; ?></td>
+                            <td><?= htmlspecialchars($item['item_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?= (int)$item['quantity']; ?></td>
                             <td>Rp <?= number_format($item['price_snapshot'], 0, ',', '.'); ?></td>
                             <td>Rp <?= number_format($item['total_price'], 0, ',', '.'); ?></td>
-                            <td><span class="badge badge-info"><?= ucfirst($item['status']); ?></span></td>
+                            <td><span class="badge badge-info"><?= ucfirst(htmlspecialchars($item['status'], ENT_QUOTES, 'UTF-8')); ?></span></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
