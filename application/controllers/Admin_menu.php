@@ -239,7 +239,7 @@ class Admin_menu extends Admin_Controller {
                     $this->log_activity('UPDATE_MENU', 'Update menu item: ' . $data['name'], $id);
                     
                     // Invalidate cache
-                    $this->_invalidate_cache();
+                    $this->_invalidate_cache($id);
                     
                     $this->output
                         ->set_content_type('application/json')
@@ -587,9 +587,15 @@ class Admin_menu extends Admin_Controller {
      * Invalidate cache menu dan categories
      * TTL 1 jam untuk cache
      */
-    private function _invalidate_cache()
+    private function _invalidate_cache($id = null)
     {
-        $this->cache->delete('menu_all');
-        $this->cache->delete('categories_all');
+        // Delete global cache
+        delete_cache('menu_all');
+        delete_cache('categories_all');
+        
+        // Delete specific menu cache jika ada ID
+        if ($id !== null) {
+            delete_cache('menu_' . $id);
+        }
     }
 }
