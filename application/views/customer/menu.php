@@ -276,6 +276,17 @@
             font-size: 12px;
             font-weight: 700;
             border: 2px solid white;
+            transition: transform 0.2s ease;
+        }
+        
+        .cart-badge.bounce {
+            animation: bounceBadge 0.3s ease;
+        }
+        
+        @keyframes bounceBadge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
         
         .cart-badge.hidden {
