@@ -87,6 +87,18 @@ class Table_model extends CI_Model {
     }
 
     /**
+     * Get table by code/table number (case-insensitive)
+     * @param string $code
+     * @return array|null
+     */
+    public function get_by_code($code)
+    {
+        $this->db->where('UPPER(table_number)', strtoupper($code));
+        $query = $this->db->get($this->table, 1);
+        return $query->row_array();
+    }
+
+    /**
      * Check if table number/code exists (untuk validasi unique)
      * @param string $table_number
      * @param int|null $exclude_id Exclude ID untuk update
