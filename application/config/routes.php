@@ -97,6 +97,17 @@ $route['admin_table/toggle_status/(:num)'] = 'admin_table/toggle_status/$1';
 $route['admin_table/print_qr/(:num)'] = 'admin_table/print_qr/$1';
 $route['admin_table/regenerate_all_qr'] = 'admin_table/regenerate_all_qr';
 
+// User Management (UC-ADM-04)
+$route['admin/users'] = 'admin_user/index';
+$route['admin_user'] = 'admin_user';
+$route['admin_user/datatable'] = 'admin_user/datatable';
+$route['admin_user/save'] = 'admin_user/save';
+$route['admin_user/edit/(:num)'] = 'admin_user/edit/$1';
+$route['admin_user/delete/(:num)'] = 'admin_user/delete/$1';
+$route['admin_user/toggle_status/(:num)'] = 'admin_user/toggle_status/$1';
+$route['admin_user/check_username_unique_ajax'] = 'admin_user/check_username_unique_ajax';
+$route['admin_user/check_email_unique_ajax'] = 'admin_user/check_email_unique_ajax';
+
 $route['admin/menu'] = 'admin/menu';
 $route['admin/menu/(:num)'] = 'admin/menu/edit/$1';
 $route['admin/orders'] = 'admin/orders';
