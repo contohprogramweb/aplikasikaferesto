@@ -1,0 +1,691 @@
+AHAPAN IMPLEMENTASI (12 Tahap)
+TAHAP 0: PREPARATION & CONTEXT LOADING
+Goal: AI memahami seluruh SRS tanpa kehilangan konteks
+plain
+
+PROMPT 0A - "SRS Analysis & Architecture Plan"
+
+Anda adalah Senior Full-Stack Developer yang akan mengimplementasikan Sistem Manajemen Kafe & Resto berbasis CodeIgniter 3 sesuai SRS v4.0. 
+
+BACA DAN ANALISIS dokumen SRS berikut secara menyeluruh:
+[Attach file SRS_Sistem_Manajemen_Kafe_Resto_v4.0.docx]
+
+TUGAS ANDA:
+1. Buat ringkasan dependency graph antar modul (mana yang harus dikerjakan pertama)
+2. Identifikasi shared components yang digunakan di multiple modul
+3. Buat daftar "critical path" implementasi yang efisien
+4. Identifikasi potensi circular dependency atau conflict dalam SRS
+
+OUTPUT yang diharapkan:
+- Dependency Graph (teks format)
+- Rekomendasi urutan implementasi modul
+- Daftar shared components (base controller, helpers, libraries)
+- Catatan potensi issue teknis
+
+JANGAN mulai coding. Fokus pada analisis dan perencanaan.
+
+TAHAP 1: PROJECT SCAFFOLDING & DATABASE
+Goal: Struktur project dan database siap
+plain
+
+PROMPT 1A - "Project Structure & Database Schema"
+
+Berdasarkan SRS v4.0 Bab 7.2.2 (Struktur Direktori) dan Bab 7.4.1 (SQL DDL), buatkan:
+
+1. STRUKTUR DIREKTORI lengkap dengan file-file berikut:
+   - application/config/app.php (konfigurasi restoran, pajak, service charge, dll)
+   - application/core/Base_Controller.php
+   - application/core/Staff_Controller.php  
+   - application/core/Customer_Controller.php
+   - application/core/Admin_Controller.php
+   - .htaccess untuk rewrite
+   - composer.json (Dompdf, QR Code library)
+
+2. SQL DDL lengkap untuk SEMUA tabel:
+   - users, tables, categories, menu_items, orders, order_items
+   - customer_sessions, order_counters, transactions, activity_logs
+   - Pastikan: foreign key, index, charset utf8mb4_unicode_ci, engine InnoDB
+   - Sertakan data seed: 1 admin (username: admin, password: Admin123), 5 meja, 3 kategori, 10 menu item
+
+3. Konfigurasi awal:
+   - config.php (csrf_protection = TRUE, encryption_key)
+   - database.php (MySQLi)
+   - autoload.php
+   - routes.php (routing dasar)
+
+CATATAN PENTING:
+- Gunakan CodeIgniter 3.1.13 pattern
+- Semua query HARUS menggunakan Query Builder CI3 (tidak raw SQL)
+- Password hash dengan BCRYPT cost 10
+- Simpan semua file ke struktur direktori yang benar
+
+OUTPUT: Sertakan path lengkap setiap file dan isi file lengkap.
+
+TAHAP 2: SHARED COMPONENTS (Helpers, Libraries, Hooks)
+Goal: Foundation yang digunakan semua modul
+plain
+
+PROMPT 2A - "Shared Helpers & Libraries"
+
+Berdasarkan SRS v4.0, buatkan shared components berikut:
+
+1. HELPER: application/helpers/custom_helper.php
+   - format_rupiah($amount) → "Rp 15.000"
+   - format_datetime($datetime) → "31-05-2026 14:30"
+   - generate_order_number() → atomic counter (gunakan tabel order_counters)
+   - audit_log($action, $entity_type, $entity_id, $old_val, $new_val)
+   - generate_customer_token($table_id)
+   - calculate_grand_total($subtotal, $discount, $discount_type, $tax, $service_charge)
+
+2. LIBRARY: application/libraries/Dompdf_lib.php
+   - Wrapper Dompdf 1.x
+   - Method generate_receipt($order_id) → PDF thermal 80mm
+   - Method generate_report($data, $title) → PDF A4 landscape
+   - Font: DejaVu Sans
+
+3. LIBRARY: application/libraries/Qrcode_lib.php
+   - Wrapper phpqrcode/endroid
+   - Method generate_table_qr($table_code, $base_url)
+   - Output: /uploads/qr/[kode].png (200x200px)
+
+4. HOOK: application/hooks/Auth_hook.php
+   - Middleware check role untuk setiap request
+   - Redirect ke 403 jika unauthorized
+   - Regenerate session ID setiap 5 menit
+
+5. CSRF AJAX Setup: assets/js/common.js
+   - getCookie() function
+   - $.ajaxSetup dengan X-CSRF-TOKEN header
+   - Auto-refresh CSRF token jika 403
+   - Toast notification system (Toastr.js wrapper)
+   - Rate limit error handler (429)
+
+VALIDASI: Pastikan tidak ada dependency ke modul yang belum dibuat.
+
+TAHAP 3: AUTHENTICATION SYSTEM
+Goal: Login/logout untuk semua role staf
+plain
+
+PROMPT 3A - "Authentication Module"
+
+Berdasarkan SRS v4.0 Bab 4.6 (Admin) dan constraint teknis, buatkan:
+
+1. CONTROLLER: application/controllers/Auth.php
+   - login() → form login dengan jValidate
+   - do_login() → validasi, BCRYPT verify, session create
+   - logout() → destroy session, redirect login
+   - forgot_password() → (opsional, placeholder)
+
+2. VIEW: application/views/auth/login.php
+   - Bootstrap 4 form
+   - jQuery Validation: username required, password required min 6
+   - Error message friendly (Bahasa Indonesia)
+   - Rate limit: tampilkan countdown jika diblokir
+
+3. SESSION MANAGEMENT:
+   - CI3 native session, database driver
+   - Remember me: 7 hari (cookie terpisah)
+   - Concurrent login: diizinkan, catat di log
+   - Session TTL: 8 jam
+
+4. SECURITY:
+   - Login attempt limit: 5x gagal = blokir 15 menit (catat IP)
+   - CSRF token di form login
+   - XSS filtering pada input
+
+VALIDASI RULES:
+- Username: required, min 4, pattern ^[a-zA-Z0-9_]+$
+- Password: required, min 6, pattern huruf+angka
+
+JANGAN buat modul admin/menu/kategori dulu. Fokus hanya authentication.
+
+TAHAP 4: ADMIN MASTER DATA (CRUD Foundation)
+Goal: Base pattern untuk semua CRUD admin
+plain
+
+PROMPT 4A - "Admin Master Data - Categories & Tables"
+
+Berdasarkan SRS v4.0 UC-ADM-02 dan UC-ADM-03, buatkan:
+
+1. CONTROLLER: application/controllers/Admin_category.php
+   - index() → DataTable server-side (10 rows)
+   - datatable() → JSON response format DataTables
+   - save() → create/update modal
+   - delete() → soft delete (active = 0) atau hard delete jika tidak punya item
+   - toggle_status() → AJAX toggle active
+
+2. CONTROLLER: application/controllers/Admin_table.php
+   - index() → DataTable server-side
+   - save() → create/update dengan QR auto-generate
+   - delete() → validasi: tidak bisa hapus jika meja terisi/menunggu bayar/dibersihkan
+   - print_qr() → generate PDF label (50x50mm, 16 label per A4) via Dompdf
+   - regenerate_all_qr() → batch regenerate jika BASE_URL berubah
+
+3. VIEW: 
+   - admin/categories.php (DataTable, modal form, jValidate)
+   - admin/tables.php (DataTable, modal form, QR preview)
+
+4. JAVASCRIPT:
+   - assets/js/admin.js (shared DataTable initialization, modal handler, AJAX CRUD)
+
+5. VALIDASI jValidate:
+   - Kategori: nama required, min 2, remote unique
+   - Meja: kode required, unique, alphanumeric, kapasitas 1-50
+
+CATATAN:
+- Gunakan Base Controller pattern (Admin_Controller extends Staff_Controller)
+- Semua form dalam modal, tidak redirect halaman
+- Loading state pada tombol simpan
+- Invalidate cache setelah CRUD
+
+TAHAP 5: MENU MANAGEMENT
+Goal: CRUD menu items dengan upload gambar
+plain
+
+PROMPT 5A - "Menu Item Management"
+
+Berdasarkan SRS v4.0 UC-ADM-01, buatkan:
+
+1. CONTROLLER: application/controllers/Admin_menu.php
+   - index() → DataTable server-side
+   - datatable() → join dengan categories
+   - save() → create/update dengan upload gambar
+   - delete() → soft delete (is_deleted = 1)
+   - toggle_available() → AJAX toggle available 0/1
+   - check_unique() → remote validation untuk nama
+
+2. UPLOAD HANDLING:
+   - Max 2MB, JPG/PNG only
+   - Resize ke max 800x800px (CI3 Image Lib)
+   - Thumbnail 200x200px untuk DataTable
+   - Rename: menu_[timestamp]_[random8].jpg
+   - Path: /uploads/menu/YYYY/MM/
+
+3. VIEW: admin/menu_items.php
+   - DataTable dengan gambar thumbnail 50x50
+   - Modal form: nama, kategori (Select2), harga (AutoNumeric), gambar (preview 100x100), deskripsi, status toggle, urutan
+   - Custom jValidate: filesize max 2MB, extension jpg|png
+
+4. CUSTOM jValidate Method (assets/js/common.js):
+   - filesize: cek element.files[0].size <= param
+
+5. CACHE:
+   - File cache untuk menu_all dan categories_all (TTL 1 jam)
+   - Auto-invalidate saat CRUD
+
+VALIDASI:
+- Nama: required, min 3, max 100, unique (case-insensitive)
+- Harga: required, number, min 100
+- Gambar: optional, max 2MB, JPG/PNG, MIME type validation
+
+TAHAP 6: USER MANAGEMENT
+Goal: CRUD staf dengan RBAC
+plain
+
+PROMPT 6A - "User/Staff Management"
+
+Berdasarkan SRS v4.0 UC-ADM-04, buatkan:
+
+1. CONTROLLER: application/controllers/Admin_user.php
+   - index() → DataTable server-side
+   - save() → create/update user
+   - delete() → soft delete (active = 0), dengan constraint:
+     * Tidak bisa nonaktifkan diri sendiri
+     * Minimal 1 admin aktif harus ada
+   - toggle_status() → AJAX toggle
+
+2. PASSWORD HANDLING:
+   - Create: required, min 6, pattern huruf+angka, hash BCRYPT
+   - Edit: optional (kosong = tidak ubah)
+   - Toggle show/hide password di form
+
+3. VIEW: admin/users.php
+   - DataTable: ID, Nama, Username, Role, Status, Last Login, Aksi
+   - Modal form dengan semua field
+   - jValidate: username unique remote, password pattern
+
+4. RBAC CHECK:
+   - Setiap controller staf extends Staff_Controller
+   - Role check di constructor
+   - Redirect 403 jika tidak authorized
+
+VALIDASI:
+- Nama: required, max 100
+- Username: required, min 4, max 20, pattern ^[a-zA-Z0-9_]+$, unique, immutable
+- Password: required (create), min 6, pattern ^(?=.*[A-Za-z])(?=.*\d).{6,}$
+- Role: required, enum admin|cashier|kitchen|waiter
+
+TAHAP 7: CUSTOMER FRONTEND (Landing & Menu)
+Goal: Pelanggan bisa scan QR dan lihat menu
+plain
+
+PROMPT 7A - "Customer Frontend - Landing & Menu"
+
+Berdasarkan SRS v4.0 UC-CUST-01 dan UC-CUST-02, buatkan:
+
+1. CONTROLLER: application/controllers/Customer.php
+   - index() → landing page (input kode meja atau scan QR)
+   - menu() → tampilkan menu digital (setelah identifikasi meja)
+   - check_table() → AJAX validasi kode meja
+   - create_session() → AJAX buat customer token
+   - validate_session() → AJAX cek token valid
+
+2. CUSTOMER SESSION ARCHITECTURE:
+   - Token format: tbl_[table_id]_[random_hash_16char]
+   - Storage: localStorage (primary), cookie fallback
+   - Server: tabel customer_sessions (cart_data JSON, expires_at +30 menit)
+   - Session recovery: cek localStorage → validasi server → restore cart
+
+3. VIEW: customer/landing.php
+   - Mobile-first design (320px+)
+   - Input kode meja (text, max 10, font 16px)
+   - Tombol "Scan QR Code" (html5-qrcode)
+   - Background tema restoran, logo tengah atas
+   - Re-scan protection: dialog konfirmasi pindah meja
+
+4. VIEW: customer/menu.php
+   - Horizontal scroll kategori (sticky top, z-index 1020)
+   - Grid 2 kolom item menu
+   - Gambar 1:1 aspect ratio, object-fit cover
+   - Badge "Habis" (opacity 50%, disabled click)
+   - Search bar (client-side filter, debounce 300ms)
+   - Floating cart button (64x64px, badge jumlah item)
+
+5. JAVASCRIPT: assets/js/customer.js
+   - QR scanner integration (html5-qrcode)
+   - LocalStorage management
+   - Cart sync ke server (/api/cart/sync)
+   - Session timeout warning (modal countdown 60 detik)
+   - Offline banner (fixed top, merah, countdown retry)
+
+VALIDASI:
+- Kode meja: alphanumeric, case-insensitive
+- Meja status: tidak boleh Tutup/Rusak/Dibersihkan
+- Browser: cek LocalStorage dan JavaScript support
+
+TAHAP 8: CUSTOMER CART & ORDERING
+Goal: Keranjang dan pengiriman pesanan
+plain
+
+PROMPT 8A - "Customer Cart & Order Submission"
+
+Berdasarkan SRS v4.0 UC-CUST-03, UC-CUST-04, UC-CUST-05, buatkan:
+
+1. CART SYSTEM (Hybrid: LocalStorage + Server Sync):
+   - LocalStorage: primary storage
+   - Sync ke server: AJAX POST /api/cart/sync (debounce 500ms)
+   - Struktur: [{menu_item_id, qty, notes, price_snapshot}]
+
+2. MODAL DETAIL ITEM:
+   - Gambar besar (max 300px)
+   - Catatan khusus (textarea, max 200 char, counter)
+   - Qty adjuster (+/-, min 1, max 99)
+   - Subtotal otomatis (harga × qty)
+   - Tombol "Tambah ke Pesanan" (fixed bottom)
+   - Fly-to-cart animation (300ms ease-out)
+   - Bounce badge animation (scale 1.2→1.0, 200ms)
+
+3. PANEL KERANJANG (Slide-up):
+   - Floating button → slide-up panel (translateY, 300ms)
+   - List item: gambar 60x60, nama, qty, harga, catatan truncated
+   - Tombol +/- per item, ikon sampah untuk hapus
+   - Konfirmasi hapus
+   - Tombol "Kosongkan Keranjang" (merah, outline)
+   - Total harga (bold, 18px)
+   - Tombol "Pesan Sekarang" (disabled jika kosong)
+   - Empty state: SVG ilustrasi, teks, CTA
+
+4. ORDER SUBMISSION:
+   - Konfirmasi ringkasan pesanan
+   - Validasi: item tersedia, meja valid, status bukan menunggu_bayar
+   - Atomic order number: tabel order_counters, INSERT ... ON DUPLICATE KEY UPDATE
+   - Format: T-YYYYMMDD-XXXX (overflow ke 5 digit jika > 9999)
+   - Insert orders + order_items dalam transaction
+   - Harga snapshot (frozen) di order_items.price_snapshot
+   - Kosongkan cart setelah sukses
+   - Redirect ke halaman status
+
+5. ADD-ON ORDER:
+   - Jika meja sudah punya order aktif, tambahkan item ke order existing
+   - Satu meja = satu tagihan terbuka (BR-09)
+
+BUSINESS RULES WAJIB:
+- BR-06: Harga frozen saat ditambahkan ke keranjang
+- BR-07: Catatan max 200 char
+- BR-08: Qty max 99
+- BR-09: Satu meja = satu order aktif
+- BR-10: Atomic order number generation
+- BR-11: Price snapshot di order_items
+
+TAHAP 9: KITCHEN DISPLAY SYSTEM (KDS)
+Goal: Dapur menerima dan proses pesanan
+plain
+
+PROMPT 9A - "Kitchen Display System"
+
+Berdasarkan SRS v4.0 UC-KIT-01, UC-KIT-02, UC-KIT-03, buatkan:
+
+1. CONTROLLER: application/controllers/Kitchen.php
+   - index() → halaman KDS
+   - orders() → AJAX polling endpoint (POST /api/kitchen/orders)
+   - accept() → terima pesanan (update status)
+   - update_status() → ubah status item (diterima→dimasak→siap)
+   - cancel_item() → tandai item tidak tersedia
+
+2. SMART POLLING (assets/js/kitchen.js):
+   - Interval: 5000ms default
+   - Exponential backoff: 5s → 10s → 20s (max) saat error
+   - Deduplication: flag is_requesting, skip jika request pending
+   - Request: {last_id, last_timestamp}
+   - Response: {updated, data[], last_id, last_timestamp}
+   - Delta: server hanya return id > last_id
+   - Rate limit: max 1 req/3 detik per session
+
+3. UI SPECIFICATIONS:
+   - Grid: 3 kolom (desktop ≥1280px), 2 kolom (tablet), 1 kolom (mobile)
+   - Sticky header: jumlah pesanan aktif, rata-rata waktu tunggu, tombol batch accept, mute
+   - Card pesanan: fixed height 280px
+     * Header: kode meja (bold 18px), nomor pesanan (monospace), waktu masuk, timer durasi (HH:MM:SS, merah jika >15 menit)
+     * Body: list item (nama, qty, catatan max 1 line), scrollable jika >4
+     * Footer: tombol status bertingkat (Terima → Sedang Dimasak → Siap), min 44px height
+   - Highlight pesanan baru (<2 menit): border 3px #FFC107, background kuning muda, pulse animation
+   - Sound alert: beep 500ms (800Hz), HARUS di-enable via user interaction pertama, mute status di LocalStorage
+
+4. STATUS FLOW:
+   - Diterima → Dimasak → Siap (tidak boleh skip)
+   - Undo: 30 detik setelah update (1x per item)
+   - Batch accept: checkbox multiple card → "Terima Semua"
+   - Auto-refresh indicator: dot hijau/merah pojok kanan atas
+
+5. CANCEL ITEM:
+   - Dropdown "Tidak Tersedia" per item
+   - Modal alasan (opsional, max 100 char)
+   - Validasi: hanya jika status masih 'diterima'
+   - Update order subtotal (kurangi harga item batal)
+   - Notifikasi ke pelanggan via polling
+
+BUSINESS RULES:
+- BR-17: FIFO ordering (created_at)
+- BR-18: Hanya lihat item diterima/dimasak
+- BR-19: Tidak boleh double accept
+- BR-20: Status berurutan, tidak boleh skip
+- BR-22: Semua item aktif siap → order status siap
+- BR-23: Batal hanya jika status diterima
+
+TAHAP 10: WAITER DASHBOARD
+Goal: Waiter mengantar pesanan dan pantau meja
+plain
+
+PROMPT 10A - "Waiter Dashboard"
+
+Berdasarkan SRS v4.0 UC-WAIT-01, UC-WAIT-02, UC-WAIT-03, buatkan:
+
+1. CONTROLLER: application/controllers/Waiter.php
+   - index() → dashboard utama
+   - ready() → AJAX polling item siap antar
+   - deliver() → konfirmasi pengantaran
+   - tables() → grid status semua meja
+   - clean_table() → ubah status dibersihkan → tersedia
+
+2. SMART POLLING (assets/js/waiter.js):
+   - Sama mekanisme dengan KDS (5s interval, exponential backoff)
+   - Endpoint: /api/waiter/ready
+   - Audio alert: sama policy dengan KDS (enable via interaction)
+
+3. UI LAYOUT:
+   - Landscape (≥1024px): 2 kolom side-by-side (50:50)
+     * Kiri: "Siap Diantar"
+     * Kanan: "Dalam Proses"
+   - Portrait (768-1023px): Tab toggle
+   - Mobile (<768px): Stacked cards
+
+4. CARD ITEM SIAP:
+   - Kode meja (bold, 18px)
+   - List item (nama, qty, catatan)
+   - Waktu siap (timer, merah jika >10 menit)
+   - Tombol "Antar" besar (min 44px, full width)
+   - Badge jumlah item siap per meja
+
+5. CARD DALAM PROSES:
+   - Kode meja, status dapur (Diterima/Dimasak)
+   - Background abu-abu muda
+
+6. GRID MEJA (halaman terpisah):
+   - 4-6 kolom tergantung layar
+   - Warna status: Hijau (Tersedia), Merah (Terisi), Kuning (Menunggu Bayar), Biru (Dibersihkan), Abu (Tutup/Rusak)
+   - Badge jumlah pesanan aktif
+   - Klik untuk detail read-only
+
+7. KONFIRMASI KEBERSIHAN:
+   - Meja status "Dibersihkan" → tombol "Meja Sudah Bersih"
+   - Update tables.status = 'tersedia'
+   - Catat log aktivitas
+
+BUSINESS RULES:
+- BR-31-A: Setelah lunas → dibersihkan → waiter konfirmasi → tersedia
+- BR-31-B: Hanya waiter/admin yang bisa ubah dibersihkan→tersedia
+- BR-39: Hanya item siap yang bisa diantar
+- BR-40: Harus login dengan role waiter
+- BR-41: Tidak boleh double confirm
+
+TAHAP 11: CASHIER PANEL
+Goal: Kasir mengelola tagihan dan pembayaran
+plain
+
+PROMPT 11A - "Cashier Panel"
+
+Berdasarkan SRS v4.0 UC-CASH-01 s/d UC-CASH-05, buatkan:
+
+1. CONTROLLER: application/controllers/Cashier.php
+   - index() → dashboard meja
+   - tables() → AJAX polling daftar meja aktif
+   - detail() → detail tagihan per meja
+   - apply_discount() → terapkan diskon
+   - pay() → proses pembayaran
+   - print_receipt() → generate PDF struk
+
+2. DASHBOARD MEJA:
+   - Grid kartu meja (4-6 kolom)
+   - Warna status: Hijau, Merah, Kuning, Biru, Abu-abu
+   - Info: kode meja (32px bold), status badge, total tagihan (18px), jumlah item, durasi (merah jika >30 menit)
+   - Indikator "Bill Requested": ikon lonceng berkedip 1s infinite (kuning)
+   - Filter: status, pencarian kode meja (client-side, debounce 300ms)
+
+3. DETAIL TAGIHAN (Modal/Sidebar, 600px desktop, full mobile):
+   - Tab horizontal: "Pesanan Aktif" (default), "Riwayat"
+   - Multiple orders: sub-tab per nomor order
+   - Tabel item: No, Nama, Qty, Harga Satuan, Subtotal, Catatan, Status badge
+   - Ringkasan: Subtotal, Diskon (editable), Pajak/Service (editable), Grand Total (bold 20px)
+   - Tombol: "Terapkan Diskon", "Proses Pembayaran", "Cetak Struk"
+
+4. FORM DISKON (Modal):
+   - Radio: Persentase (%) / Nominal (Rp)
+   - Input number dengan format currency
+   - Validasi real-time: diskon tidak boleh melebihi subtotal
+   - Preview grand total update otomatis
+   - Input alasan/keterangan (opsional, max 200 char)
+
+5. FORM PEMBAYARAN (Modal besar):
+   - Grand Total (32px bold, biru)
+   - Dropdown metode: Tunai, Kartu Debit, Kartu Kredit, QRIS, Transfer
+   - Jika Tunai: input jumlah uang (AutoNumeric), auto-calculate kembalian
+   - Kembalian: hijau jika >=0, merah jika kurang
+   - Tombol nominal cepat: "Uang Pas", "+5rb", "+10rb", "+50rb"
+   - Konfirmasi final: "Yakin menyelesaikan pembayaran?"
+
+6. PEMBAYARAN (Atomic Transaction):
+   - Update orders: status='lunas', payment_method, amount_paid, change_amount, paid_at, cashier_id
+   - Update tables: status='dibersihkan'
+   - Insert transactions (audit log)
+   - Commit/rollback
+   - Response: success + change amount
+
+7. CETAK STRUK PDF:
+   - Template: views/receipts/thermal.php
+   - CSS thermal: @page { size: 80mm auto; margin: 0; }
+   - Font: DejaVu Sans (support Unicode, Rupiah)
+   - Konten: header restoran, info order, tabel item, garis dashed, ringkasan, pembayaran, footer
+   - Output: inline PDF, auto-open tab baru
+   - Optional: save ke /uploads/receipts/YYYY/MM/
+
+8. KEYBOARD SHORTCUTS:
+   - F1 = Fokus Bayar
+   - F2 = Diskon
+   - Esc = Tutup Modal
+   - Enter = Konfirmasi (saat modal aktif)
+
+BUSINESS RULES:
+- BR-26: Diskon hanya sebelum lunas
+- BR-27: Diskon tidak boleh melebihi subtotal
+- BR-28: Pajak/service default dari config, bisa override
+- BR-29: Perubahan diskon/pajak di-log audit
+- BR-30: Satu tagihan = satu pembayaran (no partial)
+- BR-31: Setelah lunas → dibersihkan (bukan langsung tersedia)
+- BR-32: Jumlah dibayar & kembalian wajib dicatat untuk tunai
+- BR-33: Metode pembayaran wajib dicatat
+- BR-34: Kasir tidak bisa batalkan, hanya admin (refund/void)
+
+TAHAP 12: ADMIN REPORTS & REFUND
+Goal: Laporan penjualan dan refund/void
+plain
+
+PROMPT 12A - "Admin Reports & Refund/Void"
+
+Berdasarkan SRS v4.0 UC-ADM-05, UC-ADM-07, buatkan:
+
+1. CONTROLLER: application/controllers/Admin_report.php
+   - index() → halaman laporan
+   - sales() → AJAX data laporan
+   - export_pdf() → generate PDF laporan
+
+2. LAPORAN PENJUALAN:
+   - Filter: Flatpickr date range (max 31 hari, warning jika lebih)
+   - Filter: Multi-select metode pembayaran (Select2)
+   - Filter: Dropdown kasir (Select2)
+   - Summary Cards (4 kolom): Total Transaksi, Total Pendapatan, Total Diskon, Rata-rata per Transaksi
+   - Chart opsional: Chart.js grafik batang harian (jika <=31 hari)
+   - Tabel Detail: DataTable server-side (10 rows)
+     * Kolom: No, Tanggal (DD-MM-YYYY HH:MM), No.Order, Meja, Kasir, Metode, Subtotal, Diskon, Pajak, Service, Grand Total
+   - Tombol: Filter, Reset, Export PDF
+
+3. EXPORT PDF LAPORAN:
+   - A4 Landscape
+   - Header: judul, periode, tanggal generate, nama restoran
+   - Tabel: font-size 10px, semua kolom
+   - Footer: ringkasan total, Page X of Y, dicetak oleh [Admin Nama]
+   - Nama file: laporan_penjualan_[dari]_[sampai].pdf
+
+4. CONTROLLER: application/controllers/Admin_refund.php
+   - index() → halaman refund/void
+   - process() → proses refund/void
+
+5. FORM REFUND/VOID (Modal):
+   - Pilih Order: searchable dropdown (nomor order, meja, tanggal, grand total)
+   - Tipe: Radio Full Refund / Partial Refund / Void
+   - Jumlah Refund: number (hanya partial, max = grand_total)
+   - Alasan: textarea, required, max 500 char
+   - Konfirmasi Password: password admin saat ini (required)
+   - Validasi: password benar, order status=lunas, refund amount valid
+
+6. PROSES REFUND/VOID (Transaction):
+   - Insert transactions: type='refund'/'void', amount, method, cashier_id=admin_id, note
+   - Update orders: status='batal' (void) atau is_refunded=1 (refund)
+   - Update tables: status='dibersihkan' (jika void)
+   - Commit, log audit
+   - Optional: generate struk pembatalan (config GENERATE_VOID_RECEIPT)
+
+BUSINESS RULES:
+- BR-54: Laporan hanya order lunas
+- BR-55: Max 31 hari range
+- BR-56: PDF landscape A4, font 10px
+- BR-57: Summary dari query sama (tidak terpisah)
+- BR-34: Hanya admin bisa refund/void
+- BR-34-A: Void → order batal, meja dibersihkan. Refund → order lunas, flag refunded
+- BR-34-B: Struk asli immutable, struk pembatalan dokumen terpisah
+
+TAHAP 13: INTEGRATION & FINAL TESTING
+Goal: Semua modul terhubung, end-to-end testing
+plain
+
+PROMPT 13A - "Integration & Final Polish"
+
+Berdasarkan SRS v4.0 seluruhnya, lakukan integrasi dan finalisasi:
+
+1. ROUTES LENGKAP:
+   - Periksa dan lengkapi application/config/routes.php
+   - Pastikan semua endpoint API terdaftar
+   - Route untuk setiap modul: customer, kitchen, cashier, waiter, admin
+
+2. BASE CONTROLLER FINAL CHECK:
+   - Base_Controller: shared methods
+   - Staff_Controller: auth check, role check
+   - Customer_Controller: token validation, cart load
+   - Admin_Controller: admin role check
+
+3. LANGUAGE FILE:
+   - application/language/indonesia/general_lang.php
+   - application/language/indonesia/customer_lang.php
+   - application/language/indonesia/admin_lang.php
+   - Semua text UI dalam Bahasa Indonesia
+
+4. ERROR PAGES:
+   - 404: Halaman tidak ditemukan
+   - 403: Akses ditolak
+   - 500: Kesalahan sistem
+   - Masing-masing dengan ilustrasi SVG dan tombol navigasi
+
+5. CSRF INTEGRATION:
+   - Pastikan semua form memiliki hidden csrf_token
+   - Pastikan semua AJAX POST mengirim X-CSRF-TOKEN header
+   - Fallback refresh token jika expired
+
+6. RATE LIMITING:
+   - Implementasi di base controller atau hook
+   - Endpoint publik: 10 req/menit
+   - Polling: 1 req/3 detik
+   - Login: 5x gagal = 15 menit blokir
+   - Admin API: 60 req/menit
+
+7. FINAL CHECKLIST (sesuai SRS 8.5):
+   - [ ] CSRF protection aktif
+   - [ ] Session driver database
+   - [ ] Encryption key di-set
+   - [ ] Upload folder permission 755
+   - [ ] Log folder permission 755
+   - [ ] Composer dependencies terinstall
+   - [ ] Favicon dan Apple touch icon
+   - [ ] Cron job: session cleanup, backup, log rotation
+
+8. TEST SCENARIOS (verifikasi logic):
+   - Pelanggan scan QR → pesan 3 item → bayar → meja dibersihkan → waiter bersihkan → tersedia
+   - Multiple add-on order: meja A pesan 2x, tagihan tetap 1
+   - Kitchen cancel item: total tagihan berkurang otomatis
+   - Kasir diskon: validasi tidak melebihi subtotal
+   - Admin refund: konfirmasi password, log audit tercatat
+   - Session timeout: modal countdown, perpanjang session
+
+OUTPUT: Daftar file lengkap yang telah dibuat dengan path-nya, dan catatan apa saja yang perlu diverifikasi manual.
+
+📊 WORKFLOW VISUAL
+plain
+
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   TAHAP 0-1     │────▶│   TAHAP 2-3     │────▶│   TAHAP 4-6     │
+│  Preparation    │     │ Shared + Auth   │     │  Admin Master   │
+│  + Database     │     │                 │     │   Data CRUD     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+┌─────────────────┐     ┌─────────────────┐     ┌─────┘
+│   TAHAP 12-13   │◀────│   TAHAP 10-11   │◀────│   TAHAP 7-9     │
+│ Reports + Final │     │Waiter + Cashier │     │Customer + KDS   │
+│   Integration   │     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+
+💡 TIPS EKSEKUSI
+Table
+Aspek	Rekomendasi
+Token Limit	Setiap prompt di atas dirancang untuk ~2-4K token output. Jika AI terbatas, pecah lagi (misal: TAHAP 1A jadi 1A-Database, 1B-Config, 1C-Seed)
+Context Window	Berikan SRS hanya sekali di TAHAP 0, kemudian referensi "Berdasarkan SRS v4.0 yang telah dibahas"
+File Management	Gunakan format: // FILE: application/controllers/Auth.php agar AI terstruktur
+Incremental Build	Setelah setiap tahap, copy hasil ke project Anda, lalu lanjutkan dengan konteks "berdasarkan kode sebelumnya"
+Testing	Setelah TAHAP 7 (Customer), test end-to-end sederhana sebelum lanjut ke modul staf
