@@ -461,25 +461,101 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Load cart from localStorage
+     * Load cart from localStorage or cookie fallback
      */
     function loadCart() {
         var savedCart = localStorage.getItem('customer_cart');
+        
+        // Fallback to cookie if localStorage is empty
+        if (!savedCart) {
+            savedCart = getCookie('customer_cart');
+            if (savedCart) {
+                console.log('Loaded cart from cookie fallback');
+            }
+        }
+        
         if (savedCart) {
             try {
                 cart = JSON.parse(savedCart);
             } catch (e) {
+                console.error('Error parsing cart data:', e);
                 cart = [];
             }
         }
+    }
+    
+    /**
+     * Get cookie helper
+     */
+    function getCookie(name) {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
     }
 
     /**
      * Save cart to localStorage and sync to server
      */
     function saveCart() {
-        localStorage.setItem('customer_cart', JSON.stringify(cart));
+        try {
+            localStorage.setItem('customer_cart', JSON.stringify(cart));
+        } catch (e) {
+            // Handle QuotaExceededError
+            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                console.warn('LocalStorage quota exceeded, trying cookie fallback');
+                
+                // Try to store in cookie as fallback
+                var cartStr = JSON.stringify(cart);
+                var maxCookieSize = 4000; // Most browsers support 4KB cookies
+                
+                if (cartStr.length <= maxCookieSize) {
+                    setCookie('customer_cart', cartStr, 7); // 7 days
+                    showToast('Penyimpanan lokal penuh, menggunakan cookie', 'warning');
+                } else {
+                    // Cart too large for cookie, show error
+                    showToast('Keranjang terlalu besar! Kurangi jumlah item.', 'error', 5000);
+                    
+                    // Try to reduce cart size by removing oldest items
+                    if (cart.length > 1) {
+                        cart = cart.slice(-Math.floor(cart.length / 2)); // Keep last half
+                        try {
+                            localStorage.setItem('customer_cart', JSON.stringify(cart));
+                            showToast('Keranjang dikurangi otomatis', 'warning');
+                        } catch (e2) {
+                            // Still failing, clear cart
+                            cart = [];
+                            localStorage.removeItem('customer_cart');
+                            document.cookie = 'customer_cart=; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                            showToast('Keranjang dikosongkan karena penyimpanan penuh', 'error', 5000);
+                        }
+                    }
+                }
+            } else {
+                console.error('Error saving cart:', e);
+                showToast('Gagal menyimpan keranjang', 'error', 5000);
+            }
+        }
         syncCartToServer();
+    }
+    
+    /**
+     * Set cookie helper
+     */
+    function setCookie(name, value, days) {
+        var expires = '';
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = '; expires=' + date.toUTCString();
+        }
+        document.cookie = name + '=' + (value || '') + expires + '; path=/';
     }
 
     /**
@@ -799,7 +875,7 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Update cart badge
+     * Update cart badge with bounce animation
      */
     function updateCartBadge() {
         var count = cart.reduce(function(sum, item) {
@@ -809,6 +885,17 @@ var CustomerMenu = (function() {
         var badge = $('#cart-badge');
         if (count > 0) {
             badge.text(count).removeClass('hidden');
+            
+            // Trigger bounce animation
+            badge.removeClass('bounce');
+            // Force reflow to restart animation
+            void badge[0].offsetWidth;
+            badge.addClass('bounce');
+            
+            // Remove animation class after it completes
+            setTimeout(function() {
+                badge.removeClass('bounce');
+            }, 300);
         } else {
             badge.addClass('hidden');
         }
@@ -1035,10 +1122,28 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Monitor online/offline connection with session recovery
+     * Monitor online/offline connection with session recovery and 30-minute timeout tracking
      */
     function monitorConnection() {
         window.addEventListener('online', function() {
+            var offlineSince = localStorage.getItem('offline_since');
+            
+            // Clear offline timestamp
+            if (offlineSince) {
+                localStorage.removeItem('offline_since');
+                
+                // Check if offline for more than 30 minutes
+                var offlineDuration = Date.now() - parseInt(offlineSince);
+                var thirtyMinutes = 30 * 60 * 1000; // 30 minutes in ms
+                
+                if (offlineDuration > thirtyMinutes) {
+                    console.log('Offline for more than 30 minutes (' + Math.round(offlineDuration/60000) + ' min), full reconnection needed');
+                    showToast('Terputus lama, memulihkan sesi...', 'warning');
+                } else {
+                    console.log('Back online after ' + Math.round(offlineDuration/1000) + ' seconds');
+                }
+            }
+            
             $('#offline-banner').removeClass('active');
             offlineRetryCount = 0;
             
@@ -1053,8 +1158,12 @@ var CustomerMenu = (function() {
         });
 
         window.addEventListener('offline', function() {
+            // Store offline timestamp for 30-minute timeout tracking
+            localStorage.setItem('offline_since', Date.now().toString());
+            
             $('#offline-banner').addClass('active');
             startOfflineRetry();
+            showToast('Mode offline - pesanan akan disinkronkan saat online', 'warning');
         });
     }
 
@@ -1191,22 +1300,43 @@ var CustomerMenu = (function() {
 
     /**
      * Show toast notification
+     * @param {string} message - Toast message
+     * @param {string} type - Type: 'success', 'error', 'warning' (default: 'success')
+     * @param {number} duration - Duration in ms (default: 3000 for success, 5000 for error)
      */
-    function showToast(message) {
+    function showToast(message, type, duration) {
+        type = type || 'success';
+        
+        // Set default duration based on type
+        if (duration === undefined) {
+            duration = (type === 'error') ? 5000 : 3000;
+        }
+        
+        var bgColor = 'rgba(0,0,0,0.8)';
+        if (type === 'success') {
+            bgColor = 'rgba(46, 204, 113, 0.95)'; // Green
+        } else if (type === 'error') {
+            bgColor = 'rgba(231, 76, 60, 0.95)'; // Red
+        } else if (type === 'warning') {
+            bgColor = 'rgba(241, 196, 15, 0.95)'; // Yellow
+        }
+        
         var toast = $('<div class="toast-notification">' + message + '</div>');
         toast.css({
             position: 'fixed',
             bottom: '80px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
+            background: bgColor,
+            color: (type === 'warning') ? '#000' : 'white',
             padding: '12px 24px',
             borderRadius: '25px',
             fontSize: '14px',
+            fontWeight: '500',
             zIndex: 10000,
             opacity: 0,
-            transition: 'opacity 0.3s'
+            transition: 'opacity 0.3s',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         });
 
         $('body').append(toast);
@@ -1220,7 +1350,7 @@ var CustomerMenu = (function() {
             setTimeout(function() {
                 toast.remove();
             }, 300);
-        }, 3000);
+        }, duration);
     }
 
     /**
