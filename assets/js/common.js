@@ -431,6 +431,14 @@ function loadingOverlay(show, message = 'Memproses...') {
 // INITIALIZATION
 // ============================================================================
 
+// Custom jQuery Validate method untuk filesize
+$.validator.addMethod('filesize', function(value, element, param) {
+    if (element.files && element.files[0]) {
+        return element.files[0].size <= param;
+    }
+    return true; // No file selected, validation passes
+}, 'Ukuran file melebihi batas yang ditentukan');
+
 $(document).ready(function() {
     console.log('Common JS loaded successfully');
     
