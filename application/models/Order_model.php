@@ -225,6 +225,89 @@ class Order_model extends CI_Model {
     }
 
     /**
+     * Get full KDS orders (for initial page load)
+     * Includes all active orders with their items
+     * @return array
+     */
+    public function get_kds_orders_full()
+    {
+        return $this->get_kds_orders(null, 100);
+    }
+
+    /**
+     * Get KDS orders with delta filtering (for smart polling)
+     * Returns orders/items with ID > last_id OR created_at > last_timestamp
+     * @param int $last_id
+     * @param string $last_timestamp
+     * @return array
+     */
+    public function get_kds_orders_delta($last_id = 0, $last_timestamp = '')
+    {
+        // Get orders that have new/updated items since last poll
+        $this->db->select('o.*, t.table_number');
+        $this->db->from($this->table . ' o');
+        $this->db->join('tables t', 't.id = o.table_id', 'left');
+        $this->db->join($this->items_table . ' oi', 'oi.order_id = o.id');
+        $this->db->where_in('o.status', ['pending', 'confirmed', 'preparing', 'ready']);
+        
+        // Delta filtering: get orders with items newer than last known state
+        $delta_conditions = [];
+        if ($last_id > 0) {
+            $delta_conditions[] = 'oi.id > ' . (int)$last_id;
+        }
+        if (!empty($last_timestamp)) {
+            $escaped_ts = $this->db->escape($last_timestamp);
+            $delta_conditions[] = 'oi.created_at > ' . $escaped_ts;
+        }
+        
+        if (!empty($delta_conditions)) {
+            $this->db->where('(' . implode(' OR ', $delta_conditions) . ')');
+        }
+        
+        $this->db->group_by('o.id');
+        $this->db->order_by('o.created_at', 'ASC');
+        $this->db->limit(50);
+        
+        $query = $this->db->get();
+        $orders = $query->result_array();
+        
+        // Add items to each order (with delta filtering)
+        foreach ($orders as &$order) {
+            $this->db->select('oi.*, m.name as menu_item_name, m.image as menu_item_image');
+            $this->db->from($this->items_table . ' oi');
+            $this->db->join('menu_items m', 'm.id = oi.menu_item_id', 'left');
+            $this->db->where('oi.order_id', $order['id']);
+            
+            // Apply same delta filtering to items
+            if (!empty($delta_conditions)) {
+                $this->db->where('(' . implode(' OR ', $delta_conditions) . ')');
+            }
+            
+            $this->db->order_by('oi.created_at', 'ASC');
+            $items_query = $this->db->get();
+            $order['items'] = $items_query->result_array();
+        }
+        
+        return $orders;
+    }
+
+    /**
+     * Get order item by ID
+     * @param int $id
+     * @return array|null
+     */
+    public function get_item_by_id($id)
+    {
+        $this->db->select('oi.*, m.name as menu_item_name, m.image as menu_item_image');
+        $this->db->from($this->items_table . ' oi');
+        $this->db->join('menu_items m', 'm.id = oi.menu_item_id', 'left');
+        $this->db->where('oi.id', $id);
+        
+        $query = $this->db->get();
+        return $query->row_array();
+    }
+
+    /**
      * Get ready orders for waiter
      * @param string $last_id
      * @return array
