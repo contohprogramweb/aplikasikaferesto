@@ -18,6 +18,32 @@ class Base_Controller extends CI_Controller {
     {
         parent::__construct();
         
+        // Cek maintenance mode (kecuali untuk CLI requests)
+        if (config_item('maintenance_mode') === TRUE && !$this->input->is_cli_request()) {
+            $bypass_key = $this->input->get('maintenance_bypass');
+            $valid_bypass = config_item('maintenance_bypass_key');
+            
+            if ($bypass_key !== $valid_bypass || !$valid_bypass) {
+                redirect('errors/html/error_503');
+                exit;
+            }
+        }
+        
+        // Coba koneksi database dengan error handling
+        try {
+            $this->load->database();
+        } catch (Exception $e) {
+            // Log error
+            log_message('error', 'Database connection failed: ' . $e->getMessage());
+            
+            // Tampilkan halaman maintenance jika DB gagal
+            if (!$this->input->is_cli_request()) {
+                set_status_header(503);
+                $this->load->view('errors/html/error_503', ['db_error' => TRUE]);
+                exit;
+            }
+        }
+        
         // Load common libraries
         $this->load->library('session');
         $this->load->library('form_validation');

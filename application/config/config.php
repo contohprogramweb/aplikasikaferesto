@@ -170,3 +170,11 @@ $config['rewrite_short_tags'] = FALSE;
 |--------------------------------------------------------------------------
 */
 $config['proxy_ips'] = '';
+
+/*
+|--------------------------------------------------------------------------
+| Maintenance Mode Configuration
+|--------------------------------------------------------------------------
+*/
+$config['maintenance_mode'] = FALSE;
+$config['maintenance_bypass_key'] = 'admin-bypass-secret-key-2024';
