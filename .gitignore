@@ -1,1 +1,3 @@
-Nothing needs to be added to the .gitignore file based on the provided file changes, as they consist only of source code and configuration files (.php, .js).
+(application/core/MY_Exceptions.php, application/views/errors/html/error_503.php)
+
+(application/config/config.php, application/core/Base_Controller.php)
