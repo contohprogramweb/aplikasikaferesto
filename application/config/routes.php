@@ -228,8 +228,15 @@ $route['api/customer/order_status'] = 'customer/order_status';
 // Session Management API (Offline Support - SRS v4.0 3.4.5)
 $route['api/session/heartbeat'] = 'api/session_heartbeat';
 $route['api/session/validate'] = 'api/session_validate';
+$route['api/session/create'] = 'api/session_create';
 $route['api/cart/sync'] = 'api/cart_sync';
 $route['api/order/create'] = 'api/order_create';
+$route['api/order/status'] = 'api/order_status';
+$route['api/order/bill'] = 'api/order_bill';
+$route['api/table/check'] = 'api/table_check';
+$route['api/csrf/refresh'] = 'api/csrf_refresh';
+$route['api/check_unique/(:any)'] = 'api/check_unique/$1';
+$route['api/check_unique'] = 'api/check_unique';
 
 // Cron Jobs (CLI or authenticated web access)
 $route['cron/cleanup_sessions'] = 'cron/cleanup_sessions';
