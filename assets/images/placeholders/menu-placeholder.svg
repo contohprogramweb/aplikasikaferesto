@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8E53;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Plate -->
+  <ellipse cx="50" cy="55" rx="35" ry="12" fill="#E0E0E0" stroke="#BDBDBD" stroke-width="1"/>
+  <ellipse cx="50" cy="50" rx="35" ry="35" fill="#F5F5F5" stroke="#BDBDBD" stroke-width="1"/>
+  
+  <!-- Food items -->
+  <circle cx="40" cy="45" r="8" fill="url(#menuGrad)" opacity="0.9"/>
+  <circle cx="60" cy="45" r="8" fill="url(#menuGrad)" opacity="0.9"/>
+  <circle cx="50" cy="55" r="10" fill="url(#menuGrad)" opacity="0.9"/>
+  <circle cx="45" cy="35" r="6" fill="#4ECDC4" opacity="0.8"/>
+  <circle cx="58" cy="38" r="5" fill="#45B7D1" opacity="0.8"/>
+  
+  <!-- Garnish -->
+  <path d="M 35 50 Q 30 45 35 40" stroke="#96CEB4" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M 65 50 Q 70 45 65 40" stroke="#96CEB4" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Utensils -->
+  <rect x="75" y="30" width="4" height="35" rx="2" fill="#BDBDBD"/>
+  <circle cx="77" cy="28" r="5" fill="#BDBDBD"/>
+  <line x1="77" y1="26" x2="77" y2="30" stroke="#9E9E9E" stroke-width="1"/>
+  
+  <rect x="20" y="35" width="4" height="30" rx="2" fill="#BDBDBD"/>
+  <ellipse cx="22" cy="35" rx="6" ry="4" fill="#BDBDBD"/>
+  
+  <!-- Steam lines -->
+  <path d="M 45 25 Q 47 20 45 15" stroke="#BDBDBD" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 50 22 Q 52 17 50 12" stroke="#BDBDBD" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 55 25 Q 57 20 55 15" stroke="#BDBDBD" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E0E0E0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BDBDBD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#F5F5F5"/>
+  
+  <!-- Shopping cart body -->
+  <path d="M 60 80 L 70 140 L 150 140 L 160 100 L 100 100 Z" fill="url(#cartGrad)" stroke="#9E9E9E" stroke-width="2" stroke-linejoin="round"/>
+  
+  <!-- Cart handle -->
+  <path d="M 100 100 Q 100 70 130 70 L 160 100" fill="none" stroke="#9E9E9E" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Cart wheels -->
+  <circle cx="80" cy="145" r="8" fill="#757575" stroke="#616161" stroke-width="2"/>
+  <circle cx="140" cy="145" r="8" fill="#757575" stroke="#616161" stroke-width="2"/>
+  <circle cx="80" cy="145" r="3" fill="#BDBDBD"/>
+  <circle cx="140" cy="145" r="3" fill="#BDBDBD"/>
+  
+  <!-- Empty state - X mark in cart -->
+  <line x1="90" y1="110" x2="130" y2="130" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/>
+  <line x1="130" y1="110" x2="90" y2="130" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Sad face above cart -->
+  <circle cx="100" cy="60" r="20" fill="none" stroke="#BDBDBD" stroke-width="2"/>
+  <circle cx="93" cy="55" r="2" fill="#BDBDBD"/>
+  <circle cx="107" cy="55" r="2" fill="#BDBDBD"/>
+  <path d="M 95 68 Q 100 64 105 68" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Floating items (faded) -->
+  <circle cx="50" cy="70" r="8" fill="#FF6B6B" opacity="0.3"/>
+  <circle cx="150" cy="60" r="6" fill="#4ECDC4" opacity="0.3"/>
+  <rect x="160" y="80" width="10" height="10" rx="2" fill="#45B7D1" opacity="0.3"/>
+</svg>

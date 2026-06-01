@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="trayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90D9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#F5F5F5"/>
+  
+  <!-- Serving tray -->
+  <ellipse cx="100" cy="130" rx="50" ry="15" fill="url(#trayGrad)" stroke="#2E5C8A" stroke-width="2"/>
+  <path d="M 50 130 L 55 110 Q 100 95 145 110 L 150 130 Z" fill="url(#trayGrad)" stroke="#2E5C8A" stroke-width="2"/>
+  
+  <!-- Tray handles -->
+  <rect x="40" y="120" width="8" height="20" rx="3" fill="#3A6B9E"/>
+  <rect x="152" y="120" width="8" height="20" rx="3" fill="#3A6B9E"/>
+  
+  <!-- Empty plates on tray -->
+  <ellipse cx="80" cy="115" rx="18" ry="6" fill="#FFF" stroke="#DDD" stroke-width="1"/>
+  <ellipse cx="120" cy="115" rx="18" ry="6" fill="#FFF" stroke="#DDD" stroke-width="1"/>
+  
+  <!-- Empty state indicator - no food -->
+  <circle cx="100" cy="100" r="20" fill="#FFC107" opacity="0.2"/>
+  <text x="100" y="106" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFC107" text-anchor="middle">?</text>
+  
+  <!-- Clock/wait icon above -->
+  <circle cx="100" cy="65" r="14" fill="none" stroke="#BDBDBD" stroke-width="2"/>
+  <line x1="100" y1="65" x2="100" y2="58" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/>
+  <line x1="100" y1="65" x2="108" y2="65" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Floating order slips (faded) -->
+  <rect x="50" y="70" width="18" height="22" rx="2" fill="#4ECDC4" opacity="0.25"/>
+  <rect x="132" y="75" width="16" height="20" rx="2" fill="#45B7D1" opacity="0.25"/>
+  
+  <!-- Waiter silhouette hint -->
+  <circle cx="100" cy="45" r="8" fill="#BDBDBD" opacity="0.3"/>
+  <ellipse cx="100" cy="58" rx="12" ry="8" fill="#BDBDBD" opacity="0.3"/>
+  
+  <!-- Sad face below tray -->
+  <circle cx="92" cy="155" r="2.5" fill="#BDBDBD"/>
+  <circle cx="108" cy="155" r="2.5" fill="#BDBDBD"/>
+  <path d="M 95 162 Q 100 158 105 162" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Sparkles indicating readiness -->
+  <path d="M 60 100 L 62 98 L 60 96 L 58 98 Z" fill="#FFD700" opacity="0.5"/>
+  <path d="M 140 105 L 142 103 L 140 101 L 138 103 Z" fill="#FFD700" opacity="0.5"/>
+  <path d="M 70 125 L 72 123 L 70 121 L 68 123 Z" fill="#FFD700" opacity="0.5"/>
+</svg>
