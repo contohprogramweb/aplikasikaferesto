@@ -1,4 +1,10 @@
 ```
-# Database migrations - keep these in version control
-# Do not ignore migration files as they are essential for database schema management
+# Logs
+*.log
+
+# Backup and restore files
+application/logs/backup.log
+application/logs/restore.log
+database/backup.php
+database/restore.php
 ```
