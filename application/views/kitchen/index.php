@@ -466,6 +466,13 @@
             align-items: center;
             gap: 0.5rem;
         }
+        
+        /* Focused card for keyboard navigation */
+        .order-card.focused-card {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
     </style>
 </head>
 <body>

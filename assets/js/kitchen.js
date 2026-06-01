@@ -109,6 +109,118 @@
         $(document).one('click keypress', function() {
             enableAudio();
         });
+        
+        // Keyboard navigation
+        setupKeyboardNavigation();
+    }
+    
+    /**
+     * Setup keyboard navigation
+     * Arrow keys: navigate cards
+     * Enter: Accept order (if pending) or advance status
+     * Space: Toggle selection for batch operations
+     */
+    function setupKeyboardNavigation() {
+        let focusedCardIndex = -1;
+        
+        $(document).on('keydown', function(e) {
+            const $cards = $('.order-card');
+            const totalCards = $cards.length;
+            
+            if (totalCards === 0) return;
+            
+            // Arrow Down / Arrow Right: Next card
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                focusedCardIndex = (focusedCardIndex + 1) % totalCards;
+                focusCard(focusedCardIndex);
+            }
+            
+            // Arrow Up / Arrow Left: Previous card
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                focusedCardIndex = (focusedCardIndex - 1 + totalCards) % totalCards;
+                focusCard(focusedCardIndex);
+            }
+            
+            // Enter: Accept order or advance status
+            if (e.key === 'Enter' && focusedCardIndex >= 0) {
+                e.preventDefault();
+                const $card = $cards.eq(focusedCardIndex);
+                const orderId = $card.find('.batch-checkbox').data('order-id');
+                
+                if (orderId) {
+                    const order = state.orders.find(o => o.id === orderId);
+                    if (order) {
+                        if (order.status === 'pending') {
+                            acceptOrder(orderId);
+                        } else {
+                            // Advance to next status
+                            const nextStatusMap = {
+                                'confirmed': 'dimasak',
+                                'preparing': 'siap'
+                            };
+                            const newStatus = nextStatusMap[order.status];
+                            if (newStatus) {
+                                updateItemStatus(orderId, newStatus);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Space: Toggle selection for batch operations
+            if (e.key === ' ' && focusedCardIndex >= 0) {
+                e.preventDefault();
+                const $card = $cards.eq(focusedCardIndex);
+                const $checkbox = $card.find('.batch-checkbox');
+                $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+            }
+            
+            // Escape: Clear selection
+            if (e.key === 'Escape') {
+                state.selectedOrders = [];
+                $('.batch-checkbox').prop('checked', false);
+                updateBatchButton();
+            }
+            
+            // M: Toggle mute
+            if (e.key === 'm' || e.key === 'M') {
+                toggleMute();
+            }
+            
+            // A: Accept all selected (batch accept)
+            if ((e.key === 'a' || e.key === 'A') && e.ctrlKey) {
+                e.preventDefault();
+                batchAccept();
+            }
+        });
+    }
+    
+    /**
+     * Focus on a specific card by index
+     */
+    function focusCard(index) {
+        const $cards = $('.order-card');
+        
+        // Remove focus from all cards
+        $cards.removeClass('focused-card');
+        
+        // Add focus to selected card
+        const $card = $cards.eq(index);
+        $card.addClass('focused-card');
+        
+        // Scroll into view if needed
+        const cardElement = $card[0];
+        if (cardElement) {
+            cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Set focus to checkbox for accessibility
+        const $checkbox = $card.find('.batch-checkbox');
+        if ($checkbox.length) {
+            $checkbox.focus();
+        }
     }
 
     /**
@@ -822,6 +934,12 @@
     /**
      * Show notification toast
      */
+    /**
+     * Show notification toast
+     * - Success: 3 seconds
+     * - Error: 5 seconds
+     * - Position: bottom-center
+     */
     function showNotification(message, type = 'info') {
         const colors = {
             success: '#10b981',
@@ -830,38 +948,46 @@
             info: '#3b82f6'
         };
         
+        const duration = type === 'error' ? 5000 : 3000;
+
         const $toast = $(`
             <div class="toast-notification" style="
                 position: fixed;
                 bottom: 20px;
-                right: 20px;
+                left: 50%;
+                transform: translateX(-50%);
                 background: ${colors[type] || colors.info};
                 color: white;
                 padding: 1rem 1.5rem;
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 z-index: 9999;
-                animation: slideIn 0.3s ease;
+                animation: slideInUp 0.3s ease;
+                max-width: 90%;
+                text-align: center;
             ">
                 ${message}
             </div>
         `);
-        
-        $('body').append($toast);
-        
-        setTimeout(() => {
-            $toast.fadeOut(300, function() {
-                $(this).remove();
-            });
-        }, 3000);
-    }
 
-    // Add slideIn animation
+        $('body').append($toast);
+
+        setTimeout(() => {
+            $toast.css('animation', 'slideOutDown 0.3s ease');
+            setTimeout(() => $toast.remove(), 300);
+        }, duration);
+    }
+    
+    // Add slide animations
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        @keyframes slideInUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideOutDown {
+            from { transform: translate(-50%, 0); opacity: 1; }
+            to { transform: translate(-50%, 100%); opacity: 0; }
         }
     `;
     document.head.appendChild(style);
