@@ -11,6 +11,8 @@ var CustomerLanding = (function() {
     var html5QrCode = null;
     var currentTableCode = null;
     var existingSession = null;
+    var heartbeatInterval = null;
+    var heartbeatQueue = [];
 
     /**
      * Initialize landing page functionality
@@ -426,6 +428,8 @@ var CustomerMenu = (function() {
     var sessionTimeoutTimer = null;
     var offlineRetryCount = 0;
     var offlineRetryTimer = null;
+    var heartbeatInterval = null;
+    var heartbeatQueue = [];
 
     /**
      * Initialize menu page functionality
@@ -446,7 +450,7 @@ var CustomerMenu = (function() {
         // Setup event listeners
         setupEventListeners();
 
-        // Start session monitoring
+        // Start session monitoring with heartbeat
         startSessionMonitoring();
 
         // Monitor online/offline status
@@ -853,11 +857,112 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Start session monitoring
+     * Start session monitoring with heartbeat
      */
     function startSessionMonitoring() {
         checkSessionExpiry();
         sessionTimeoutTimer = setInterval(checkSessionExpiry, 10000); // Check every 10 seconds
+        
+        // Start heartbeat: send every 5 minutes (300000ms)
+        startHeartbeat();
+    }
+
+    /**
+     * Start heartbeat mechanism
+     * Sends heartbeat every 5 minutes to extend session
+     * Only when online, queues if offline
+     */
+    function startHeartbeat() {
+        // Clear any existing interval
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
+        
+        // Send heartbeat every 5 minutes (300000 ms)
+        heartbeatInterval = setInterval(function() {
+            sendHeartbeat();
+        }, 300000);
+    }
+
+    /**
+     * Send heartbeat to server
+     * Queues if offline, sends when online
+     */
+    function sendHeartbeat() {
+        if (!navigator.onLine) {
+            // Queue heartbeat for later
+            heartbeatQueue.push({
+                token: config.token,
+                timestamp: Date.now()
+            });
+            console.log('Offline: heartbeat queued');
+            return;
+        }
+        
+        // Send heartbeat AJAX request
+        $.ajax({
+            url: config.sessionHeartbeatUrl,
+            type: 'POST',
+            data: {
+                token: config.token,
+                '<?= $this->security->get_csrf_token_name() ?>': getCsrfToken()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    config.sessionExpires = response.data.expires_at;
+                    console.log('Heartbeat successful, session extended to: ' + response.data.expires_at);
+                    
+                    // Process any queued heartbeats
+                    processHeartbeatQueue();
+                } else {
+                    console.log('Heartbeat failed:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Heartbeat error:', error);
+                // Queue for retry
+                heartbeatQueue.push({
+                    token: config.token,
+                    timestamp: Date.now()
+                });
+            }
+        });
+    }
+
+    /**
+     * Process queued heartbeats when back online
+     */
+    function processHeartbeatQueue() {
+        if (heartbeatQueue.length === 0) {
+            return;
+        }
+        
+        // Only send one heartbeat to clear queue
+        var queued = heartbeatQueue.shift();
+        
+        $.ajax({
+            url: config.sessionHeartbeatUrl,
+            type: 'POST',
+            data: {
+                token: config.token,
+                '<?= $this->security->get_csrf_token_name() ?>': getCsrfToken()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    config.sessionExpires = response.data.expires_at;
+                    console.log('Queued heartbeat processed');
+                    // Continue processing remaining queue
+                    setTimeout(processHeartbeatQueue, 1000);
+                }
+            },
+            error: function() {
+                // Put it back in queue
+                heartbeatQueue.unshift(queued);
+                console.log('Queued heartbeat failed, will retry later');
+            }
+        });
     }
 
     /**
@@ -930,14 +1035,21 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Monitor online/offline connection
+     * Monitor online/offline connection with session recovery
      */
     function monitorConnection() {
         window.addEventListener('online', function() {
             $('#offline-banner').removeClass('active');
             offlineRetryCount = 0;
+            
             // Sync cart when back online
             syncCartToServer();
+            
+            // Process queued heartbeats
+            processHeartbeatQueue();
+            
+            // Session recovery: validate token and restore if needed
+            recoverSessionAfterOffline();
         });
 
         window.addEventListener('offline', function() {
@@ -947,11 +1059,115 @@ var CustomerMenu = (function() {
     }
 
     /**
-     * Start offline retry countdown
+     * Session recovery after coming back online
+     * Validates token, creates new session if expired but cart is valid
+     */
+    function recoverSessionAfterOffline() {
+        var token = localStorage.getItem('customer_token');
+        var tableCode = localStorage.getItem('customer_table_code');
+        var cartData = localStorage.getItem('customer_cart');
+        
+        if (!token) {
+            console.log('No token found for session recovery');
+            return;
+        }
+        
+        // Validate session with server
+        $.ajax({
+            url: config.sessionValidateUrl,
+            type: 'POST',
+            data: {
+                token: token,
+                '<?= $this->security->get_csrf_token_name() ?>': getCsrfToken()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.valid) {
+                    console.log('Session validated successfully');
+                    // Session is still valid, update expiry
+                    config.sessionExpires = response.data.expires_at;
+                    
+                    // Sync cart to server
+                    if (cartData) {
+                        var localCart = JSON.parse(cartData);
+                        if (localCart.length > 0) {
+                            syncCartToServer();
+                        }
+                    }
+                } else if (response.expired && cartData) {
+                    // Token expired but we have cart data
+                    console.log('Session expired, attempting recovery with cart data');
+                    
+                    var localCart = JSON.parse(cartData);
+                    if (localCart.length > 0) {
+                        // Create new session with same table and restore cart
+                        createNewSessionWithCart(tableCode, localCart);
+                    } else {
+                        // No cart data, redirect to landing
+                        handleSessionExpired();
+                    }
+                } else {
+                    console.log('Session invalid, clearing');
+                    handleSessionExpired();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Session validation failed:', error);
+                // Try to recover with cart data if available
+                if (cartData) {
+                    var localCart = JSON.parse(cartData);
+                    if (localCart.length > 0) {
+                        createNewSessionWithCart(tableCode, localCart);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Create new session with saved cart data
+     */
+    function createNewSessionWithCart(tableCode, cartData) {
+        // First need to get table_id from table_code
+        $.ajax({
+            url: config.checkTableUrl.replace('check_table', 'validate_session'),
+            type: 'POST',
+            data: {
+                token: localStorage.getItem('customer_token'),
+                '<?= $this->security->get_csrf_token_name() ?>': getCsrfToken()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.data && response.data.table_id) {
+                    // We have the table_id, now create new session
+                    // This requires redirecting to create a new session
+                    // Store cart for later sync
+                    localStorage.setItem('pending_cart_sync', JSON.stringify(cartData));
+                    localStorage.setItem('pending_table_id', response.data.table_id);
+                    
+                    // Redirect to create new session
+                    window.location.href = '/customer?error=session_expired&recover=1';
+                } else {
+                    // Can't recover, redirect to landing
+                    handleSessionExpired();
+                }
+            },
+            error: function() {
+                handleSessionExpired();
+            }
+        });
+    }
+
+    /**
+     * Start offline retry countdown with fade animation
      */
     function startOfflineRetry() {
         var countdownEl = $('#retry-countdown');
+        var bannerEl = $('#offline-banner');
         var retryDelay = 3;
+
+        // Fade in when starting
+        bannerEl.removeClass('fade-out').addClass('active');
 
         offlineRetryTimer = setInterval(function() {
             retryDelay--;
@@ -960,7 +1176,11 @@ var CustomerMenu = (function() {
             if (retryDelay <= 0) {
                 clearInterval(offlineRetryTimer);
                 if (navigator.onLine) {
-                    $('#offline-banner').removeClass('active');
+                    // Fade out before hiding
+                    bannerEl.addClass('fade-out');
+                    setTimeout(function() {
+                        bannerEl.removeClass('active').removeClass('fade-out');
+                    }, 300);
                 } else {
                     retryDelay = 3;
                     startOfflineRetry();

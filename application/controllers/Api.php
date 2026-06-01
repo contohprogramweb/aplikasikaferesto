@@ -473,7 +473,8 @@ class Api extends CI_Controller {
                 'message' => 'Session telah berakhir',
                 'code' => 410,
                 'valid' => false,
-                'expired' => true
+                'expired' => true,
+                'cart_data' => json_decode($session['cart_data'], true) ?: []
             ]);
             return;
         }
@@ -494,6 +495,72 @@ class Api extends CI_Controller {
                 'cart_data' => $cart_data,
                 'expires_at' => $session['expires_at'],
                 'time_remaining' => strtotime($session['expires_at']) - time()
+            ]
+        ]);
+    }
+
+    /**
+     * Session Heartbeat
+     * POST /api/session/heartbeat
+     * Extends session expiry by 30 minutes
+     */
+    public function session_heartbeat()
+    {
+        $this->output->set_content_type('application/json');
+        
+        // Only accept POST
+        if ($this->input->method() !== 'post') {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Method not allowed',
+                'code' => 405
+            ]);
+            return;
+        }
+
+        $token = $this->input->post('token');
+        
+        if (!$token) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Token required',
+                'code' => 422
+            ]);
+            return;
+        }
+
+        $session = $this->Customer_session_model->get_by_token($token);
+        
+        if (!$session) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Session tidak ditemukan',
+                'code' => 404
+            ]);
+            return;
+        }
+
+        // Check if session is already expired
+        if (strtotime($session['expires_at']) <= time()) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Session telah berakhir',
+                'code' => 410,
+                'expired' => true
+            ]);
+            return;
+        }
+
+        // Update expires_at = NOW() + 30 minutes
+        $new_expires_at = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+        $this->Customer_session_model->extend($token, 30);
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Session extended',
+            'data' => [
+                'expires_at' => $new_expires_at,
+                'extended_by' => 30 // minutes
             ]
         ]);
     }

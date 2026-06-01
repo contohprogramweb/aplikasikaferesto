@@ -225,6 +225,17 @@ $route['api/customer/order'] = 'customer/order';
 $route['api/customer/payment'] = 'customer/payment';
 $route['api/customer/order_status'] = 'customer/order_status';
 
+// Session Management API (Offline Support - SRS v4.0 3.4.5)
+$route['api/session/heartbeat'] = 'api/session_heartbeat';
+$route['api/session/validate'] = 'api/session_validate';
+$route['api/cart/sync'] = 'api/cart_sync';
+$route['api/order/create'] = 'api/order_create';
+
+// Cron Jobs (CLI or authenticated web access)
+$route['cron/cleanup_sessions'] = 'cron/cleanup_sessions';
+$route['cron/cleanup_sessions_manual'] = 'cron/cleanup_sessions_manual';
+$route['cron/health'] = 'cron/health';
+
 /*
 |--------------------------------------------------------------------------
 | Utility Routes

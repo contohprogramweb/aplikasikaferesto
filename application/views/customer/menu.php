@@ -556,15 +556,38 @@
             text-align: center;
             font-size: 13px;
             z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
         
         .offline-banner.active {
             display: block;
+            opacity: 1;
+        }
+        
+        .offline-banner.fade-out {
+            opacity: 0;
         }
         
         .offline-banner .retry-countdown {
             font-weight: 700;
             margin-left: 5px;
+        }
+        
+        .offline-banner .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .offline-banner .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
         
         @media (max-width: 360px) {
@@ -584,6 +607,9 @@
     <div class="offline-banner" id="offline-banner">
         <i class="fas fa-wifi"></i> Koneksi terputus. Menghubungkan ulang... 
         <span class="retry-countdown" id="retry-countdown">(3)</span>
+        <button class="retry-btn" id="btn-retry-offline" onclick="window.location.reload()">
+            <i class="fas fa-redo"></i> Refresh Manual
+        </button>
     </div>
 
     <!-- Sticky Category Header -->
