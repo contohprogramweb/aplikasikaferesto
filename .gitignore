@@ -1,26 +1,47 @@
-```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
+# Database migration files
+*.sql
 
 # Dependencies
-vendor/
-composer.lock
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
 
-# Logs and temp files
-*.log
-*.tmp
-
-# Environment
+# Environment variables
 .env
 .env.local
 *.env.*
 
-# Editors
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*.tmp
 
-# OS generated files
+# Logs and cache
+*.log
+coverage/
+htmlcov/
+*.coverage
+
+# OS specific
 .DS_Store
 Thumbs.db
-```
+
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
