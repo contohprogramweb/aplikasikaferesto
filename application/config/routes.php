@@ -27,6 +27,15 @@ $route['404_override'] = 'errors/page_missing';
 
 /*
 |--------------------------------------------------------------------------
+| Error Pages Override
+|--------------------------------------------------------------------------
+| Custom error pages for different HTTP status codes
+*/
+$route['error_403'] = 'errors/error_403';
+$route['error_500'] = 'errors/error_500';
+
+/*
+|--------------------------------------------------------------------------
 | Translate Dashes
 |--------------------------------------------------------------------------
 | Automatically convert dashes in URIs to underscores
@@ -132,6 +141,36 @@ $route['staff/kitchen'] = 'staff/kitchen';
 
 /*
 |--------------------------------------------------------------------------
+| Staff Routes (Kitchen, Waiter, Cashier)
+|--------------------------------------------------------------------------
+*/
+// Kitchen Display System (UC-KIT-01, UC-KIT-02, UC-KIT-03)
+$route['kitchen'] = 'kitchen/index';
+$route['kds'] = 'kitchen/index';
+$route['api/kitchen/orders'] = 'kitchen/orders';
+$route['kitchen/accept'] = 'kitchen/accept';
+$route['kitchen/update_status'] = 'kitchen/update_status';
+$route['kitchen/cancel_item'] = 'kitchen/cancel_item';
+$route['kitchen/undo_status'] = 'kitchen/undo_status';
+
+// Waiter Dashboard (UC-WAIT-01, UC-WAIT-02, UC-WAIT-03)
+$route['waiter'] = 'waiter/index';
+$route['api/waiter/ready'] = 'waiter/ready';
+$route['waiter/deliver'] = 'waiter/deliver';
+$route['waiter/tables'] = 'waiter/tables';
+$route['waiter/clean_table'] = 'waiter/clean_table';
+
+// Cashier Dashboard (UC-CASH-01 to UC-CASH-05)
+$route['cashier'] = 'cashier/index';
+$route['api/cashier/tables'] = 'cashier/tables';
+$route['cashier/detail/(:num)'] = 'cashier/detail/$1';
+$route['cashier/apply_discount'] = 'cashier/apply_discount';
+$route['cashier/pay'] = 'cashier/pay';
+$route['cashier/print_receipt/(:num)'] = 'cashier/print_receipt/$1';
+$route['cashier/clean_table'] = 'cashier/clean_table';
+
+/*
+|--------------------------------------------------------------------------
 | Customer Routes (QR Ordering)
 |--------------------------------------------------------------------------
 */
@@ -158,6 +197,31 @@ $route['api/orders'] = 'api/orders';
 $route['api/orders/(:num)'] = 'api/orders/detail/$1';
 $route['api/tables'] = 'api/tables';
 $route['api/tables/(:num)/status'] = 'api/tables/status/$1';
+
+// Kitchen API endpoints
+$route['api/kitchen/orders'] = 'kitchen/orders';
+$route['api/kitchen/accept'] = 'kitchen/accept';
+$route['api/kitchen/update_status'] = 'kitchen/update_status';
+$route['api/kitchen/cancel_item'] = 'kitchen/cancel_item';
+
+// Waiter API endpoints
+$route['api/waiter/ready'] = 'waiter/ready';
+$route['api/waiter/deliver'] = 'waiter/deliver';
+$route['api/waiter/tables'] = 'waiter/tables';
+$route['api/waiter/clean_table'] = 'waiter/clean_table';
+
+// Cashier API endpoints
+$route['api/cashier/tables'] = 'cashier/tables';
+$route['api/cashier/detail'] = 'cashier/detail';
+$route['api/cashier/apply_discount'] = 'cashier/apply_discount';
+$route['api/cashier/pay'] = 'cashier/pay';
+$route['api/cashier/print_receipt'] = 'cashier/print_receipt';
+
+// Customer API endpoints
+$route['api/customer/session'] = 'customer/session';
+$route['api/customer/cart'] = 'customer/cart';
+$route['api/customer/order'] = 'customer/order';
+$route['api/customer/payment'] = 'customer/payment';
 
 /*
 |--------------------------------------------------------------------------
