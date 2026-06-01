@@ -51,6 +51,11 @@ $route['logout'] = 'auth/logout';
 $route['register'] = 'auth/register';
 $route['forgot-password'] = 'auth/forgot_password';
 $route['reset-password'] = 'auth/reset_password';
+$route['auth/login'] = 'auth/login';
+$route['auth/do_login'] = 'auth/do_login';
+$route['auth/logout'] = 'auth/logout';
+$route['auth/forgot_password'] = 'auth/forgot_password';
+$route['auth/do_forgot_password'] = 'auth/do_forgot_password';
 
 /*
 |--------------------------------------------------------------------------
