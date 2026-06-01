@@ -59,17 +59,34 @@ $route['auth/do_forgot_password'] = 'auth/do_forgot_password';
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes
+| Admin Routes - Category & Table Management
 |--------------------------------------------------------------------------
 */
 $route['admin'] = 'admin/dashboard';
 $route['admin/dashboard'] = 'admin/dashboard';
 $route['admin/users'] = 'admin/users';
 $route['admin/users/(:num)'] = 'admin/users/edit/$1';
-$route['admin/tables'] = 'admin/tables';
-$route['admin/tables/(:num)'] = 'admin/tables/edit/$1';
-$route['admin/categories'] = 'admin/categories';
-$route['admin/categories/(:num)'] = 'admin/categories/edit/$1';
+
+// Category Management (UC-ADM-02)
+$route['admin/categories'] = 'admin_category/index';
+$route['admin_category'] = 'admin_category';
+$route['admin_category/datatable'] = 'admin_category/datatable';
+$route['admin_category/save'] = 'admin_category/save';
+$route['admin_category/edit/(:num)'] = 'admin_category/edit/$1';
+$route['admin_category/delete/(:num)'] = 'admin_category/delete/$1';
+$route['admin_category/toggle_status/(:num)'] = 'admin_category/toggle_status/$1';
+
+// Table Management (UC-ADM-03)
+$route['admin/tables'] = 'admin_table/index';
+$route['admin_table'] = 'admin_table';
+$route['admin_table/datatable'] = 'admin_table/datatable';
+$route['admin_table/save'] = 'admin_table/save';
+$route['admin_table/edit/(:num)'] = 'admin_table/edit/$1';
+$route['admin_table/delete/(:num)'] = 'admin_table/delete/$1';
+$route['admin_table/toggle_status/(:num)'] = 'admin_table/toggle_status/$1';
+$route['admin_table/print_qr/(:num)'] = 'admin_table/print_qr/$1';
+$route['admin_table/regenerate_all_qr'] = 'admin_table/regenerate_all_qr';
+
 $route['admin/menu'] = 'admin/menu';
 $route['admin/menu/(:num)'] = 'admin/menu/edit/$1';
 $route['admin/orders'] = 'admin/orders';

@@ -5,7 +5,7 @@ __pycache__/
 
 # Dependencies
 vendor/
-node_modules/
+composer.lock
 
 # Logs and temp files
 *.log
@@ -20,6 +20,7 @@ node_modules/
 .vscode/
 .idea/
 
-# Database
-*.sql
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
