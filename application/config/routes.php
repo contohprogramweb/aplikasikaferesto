@@ -76,6 +76,16 @@ $route['admin_category/edit/(:num)'] = 'admin_category/edit/$1';
 $route['admin_category/delete/(:num)'] = 'admin_category/delete/$1';
 $route['admin_category/toggle_status/(:num)'] = 'admin_category/toggle_status/$1';
 
+// Menu Item Management (UC-ADM-01)
+$route['admin/menu-items'] = 'admin_menu/index';
+$route['admin_menu'] = 'admin_menu';
+$route['admin_menu/datatable'] = 'admin_menu/datatable';
+$route['admin_menu/save'] = 'admin_menu/save';
+$route['admin_menu/edit/(:num)'] = 'admin_menu/edit/$1';
+$route['admin_menu/delete/(:num)'] = 'admin_menu/delete/$1';
+$route['admin_menu/toggle_available/(:num)'] = 'admin_menu/toggle_available/$1';
+$route['admin_menu/check_name_unique_ajax'] = 'admin_menu/check_name_unique_ajax';
+
 // Table Management (UC-ADM-03)
 $route['admin/tables'] = 'admin_table/index';
 $route['admin_table'] = 'admin_table';
