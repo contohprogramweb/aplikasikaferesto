@@ -61,11 +61,11 @@
             <form method="get" action="<?= site_url('admin/refund'); ?>" class="form-inline">
                 <div class="form-group mr-3">
                     <label for="start_date" class="mr-2">Tanggal Mulai:</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" value="<?= $start_date; ?>">
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="form-group mr-3">
                     <label for="end_date" class="mr-2">Tanggal Akhir:</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date" value="<?= $end_date; ?>">
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <button type="submit" class="btn btn-primary mr-2">
                     <i class="fas fa-search"></i> Filter
@@ -90,11 +90,11 @@
                                 <div class="col-md-6 col-lg-4">
                                     <div class="transaction-card">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h5 class="mb-0"><?= esc_html($trx['order_number']); ?></h5>
+                                            <h5 class="mb-0"><?= htmlspecialchars($trx['order_number'], ENT_QUOTES, 'UTF-8'); ?></h5>
                                             <span class="badge badge-success">Paid</span>
                                         </div>
-                                        <p class="mb-1"><strong>Meja:</strong> <?= esc_html($trx['table_code']); ?></p>
-                                        <p class="mb-1"><strong>Kasir:</strong> <?= esc_html($trx['cashier_name']); ?></p>
+                                        <p class="mb-1"><strong>Meja:</strong> <?= htmlspecialchars($trx['table_code'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                        <p class="mb-1"><strong>Kasir:</strong> <?= htmlspecialchars($trx['cashier_name'], ENT_QUOTES, 'UTF-8'); ?></p>
                                         <p class="mb-1"><strong>Tanggal:</strong> <?= date('d/m/Y H:i', strtotime($trx['created_at'])); ?></p>
                                         <div class="d-flex justify-content-between align-items-center mt-3">
                                             <span class="amount-badge">Rp <?= number_format($trx['amount'], 0, ',', '.'); ?></span>

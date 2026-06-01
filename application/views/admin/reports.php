@@ -49,16 +49,16 @@
             <form method="get" action="<?= site_url('admin/report'); ?>" class="form-inline">
                 <div class="form-group mr-3">
                     <label for="start_date" class="mr-2">Tanggal Mulai:</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" value="<?= $start_date; ?>">
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <div class="form-group mr-3">
                     <label for="end_date" class="mr-2">Tanggal Akhir:</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date" value="<?= $end_date; ?>">
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <button type="submit" class="btn btn-primary mr-2">
                     <i class="fas fa-search"></i> Filter
                 </button>
-                <a href="<?= site_url('admin/report/export_pdf?start_date=' . $start_date . '&end_date=' . $end_date); ?>" class="btn btn-success" target="_blank">
+                <a href="<?= site_url('admin/report/export_pdf?start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date)); ?>" class="btn btn-success" target="_blank">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
             </form>
@@ -138,8 +138,8 @@
                                     <?php $no = 1; foreach ($top_items as $item): ?>
                                     <tr>
                                         <td><?= $no++; ?></td>
-                                        <td><?= esc_html($item['item_name']); ?></td>
-                                        <td><?= $item['total_qty']; ?> item</td>
+                                        <td><?= htmlspecialchars($item['item_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td><?= (int)$item['total_qty']; ?> item</td>
                                         <td>Rp <?= number_format($item['total_sales'], 0, ',', '.'); ?></td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -176,14 +176,14 @@
                                 <?php if (!empty($transactions)): ?>
                                     <?php foreach ($transactions as $trx): ?>
                                     <tr>
-                                        <td><?= esc_html($trx['order_number']); ?></td>
-                                        <td><?= esc_html($trx['table_code']); ?></td>
-                                        <td><?= esc_html($trx['cashier_name']); ?></td>
+                                        <td><?= htmlspecialchars($trx['order_number'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td><?= htmlspecialchars($trx['table_code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td><?= htmlspecialchars($trx['cashier_name'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><?= date('d/m/Y H:i', strtotime($trx['created_at'])); ?></td>
                                         <td>Rp <?= number_format($trx['amount'], 0, ',', '.'); ?></td>
                                         <td>
                                             <span class="badge badge-<?= $trx['status'] == 'paid' ? 'success' : 'warning'; ?>">
-                                                <?= ucfirst($trx['status']); ?>
+                                                <?= ucfirst(htmlspecialchars($trx['status'], ENT_QUOTES, 'UTF-8')); ?>
                                             </span>
                                         </td>
                                     </tr>

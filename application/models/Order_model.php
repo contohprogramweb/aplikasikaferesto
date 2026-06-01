@@ -458,8 +458,9 @@ class Order_model extends CI_Model {
     }
 
     /**
-     * Generate unique order number
+     * Generate unique order number atomically
      * Format: [PREFIX]-YYYYMMDD-XXXX
+     * Uses SELECT FOR UPDATE to prevent race conditions (BR-10)
      * @return string
      */
     public function generate_order_number()
@@ -467,20 +468,29 @@ class Order_model extends CI_Model {
         $prefix = $this->config->item('order_prefix') ?: 'ORD';
         $date_part = date('Ymd');
         
-        // Use order_counters table for atomic increment
-        $this->db->replace('order_counters', [
-            'counter_name' => 'daily_orders_' . $date_part,
-            'current_value' => 1
-        ]);
+        $this->db->trans_start();
         
-        $this->db->set('current_value', 'current_value + 1', FALSE);
-        $this->db->where('counter_name', 'daily_orders_' . $date_part);
-        $this->db->update('order_counters');
+        // Lock the row to prevent race condition (BR-10)
+        $this->db->query("SELECT current_value FROM {$this->db->dbprefix('order_counters')} WHERE counter_name = ? FOR UPDATE", ['daily_orders_' . $date_part]);
         
         $query = $this->db->get_where('order_counters', ['counter_name' => 'daily_orders_' . $date_part]);
         $row = $query->row_array();
         
-        $sequence = str_pad($row['current_value'], 4, '0', STR_PAD_LEFT);
+        if ($row) {
+            $new_value = $row['current_value'] + 1;
+            $this->db->where('counter_name', 'daily_orders_' . $date_part)->update('order_counters', ['current_value' => $new_value]);
+        } else {
+            $new_value = 1;
+            $this->db->insert('order_counters', ['counter_name' => 'daily_orders_' . $date_part, 'current_value' => 1]);
+        }
+        
+        $this->db->trans_complete();
+        
+        if ($this->db->trans_status() === FALSE) {
+            return $prefix . '-' . $date_part . '-ERR';
+        }
+        
+        $sequence = str_pad($new_value, 4, '0', STR_PAD_LEFT);
         
         return $prefix . '-' . $date_part . '-' . $sequence;
     }
